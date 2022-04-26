@@ -1,2 +1,2 @@
 # jeju
-jejudo_macaron
+jejudo_gogogo
