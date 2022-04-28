@@ -51,8 +51,7 @@ print("Image size[%{}, %{}]", img_width, img_height)
 
 print("H")
 
-###########
-####
+
 
 
 
