@@ -17,10 +17,9 @@ from jeju.msg import erp_write
 from path_planning.global_path import GlobalPath
 from sensor.sub_erp_state import sub_erp_state
 from missions.mission_cruising import mission_cruising
-from missions.mission_parking import mission_parking
 from missions.mission_traffic import mission_traffic_straight, mission_traffic_left
 
-WHERE = 3 # 1 대운동장, 2 K city 예선, 3 K city 본선, 5 대운동장 직선, 6 대운동장 찐 직선
+WHERE = 7 # 1 대운동장, 2 K city 예선, 3 K city 본선, 5 대운동장 직선, 6 대운동장 찐 직선
 
 CRUISING_SPEED = 200
 
@@ -85,6 +84,10 @@ elif WHERE == 6: # 직선 테스트
                                                 [9106.8 - 15.0, 9106.8 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
 
+elif WHERE == 7:
+    GLOBAL_PATH_NAME = "man_jeju1.npy"
+    mission_coord = {"lane1" : [], "obstacle1" : [], "track" : [],
+                    "obstacle2" : [], "lane2" : []}
 
 def distance(mission_pose, s):
     determine = False
