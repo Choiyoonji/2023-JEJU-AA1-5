@@ -8,15 +8,15 @@ import numpy as np
 import math
 
 # message 파일
-from macaron_4.msg import erp_write, erp_read
+from jeju.msg import erp_write, erp_read
 from sensor_msgs.msg import PointCloud
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/src/sensor")
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/src/missions")
 
 # 모듈 import
-from mission_track import mission_track, path_planning, visual, lidar_zed_matching
-from macaron_4.msg import erp_write
+from missions.mission_track import mission_track, path_planning, visual, lidar_zed_matching
+from jeju.msg import erp_write
 
 
 # Parameter

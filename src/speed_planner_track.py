@@ -9,8 +9,8 @@ from math import pi
 import os, sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/src/sensor")
 # message file
-from macaron_4.msg import erp_read
-from macaron_4.msg import erp_write
+from jeju.msg import erp_read
+from jeju.msg import erp_write
 from std_msgs.msg import Float64
 
 # 곡률에따른 속도제어

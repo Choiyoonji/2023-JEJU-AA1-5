@@ -8,8 +8,8 @@ import time
 from math import pi
 
 # message file
-from macaron_4.msg import erp_read
-from macaron_4.msg import erp_write
+from jeju.msg import erp_read
+from jeju.msg import erp_write
 from std_msgs.msg import Float64
 
 # declaration
