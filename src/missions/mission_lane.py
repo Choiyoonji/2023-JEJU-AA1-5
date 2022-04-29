@@ -146,15 +146,17 @@ class lane_detection:
         # print("newY ::::::::::::::", newY)
         
         count = 0 
+        
         for i in range(len(Y)):
             if Y[i] not in newY:
                 count += 1
-                print(Y[i], " not in list")
+                # print(Y[i], " not in list")
             else:
                 newX.append(X[i])
 
         if count == 0: 
-            print("############################################")
+            pass
+            # print("############################################")
         else:
             print("Remove Noises")
             
@@ -166,20 +168,20 @@ class lane_detection:
         right = []
         h, w = img.shape
         
-        for y in range(h):
-            for x in range(w):
+        for y in range(h // 3 * 2, h):
+            for x in range(w // 6):
                 if img[y][x] == 255:
-                    if y > 150:
-                        if x < 100:
-                            left.append((x, y))
-                        if x > 540:
-                            right.append((x, y))
+                    left.append((x, y))
+                    
+            for x in range(w // 6 * 5, w):
+                if img[y][x] == 255:
+                        right.append((x, y))
         
         if len(right) != 0 or len(left) != 0:
     
 
-            print("len(left)", len(left))
-            print("len(right)", len(right))
+            # print("len(left)", len(left))
+            # print("len(right)", len(right))
             
             IGNORED = 100
             
@@ -206,9 +208,12 @@ class lane_detection:
             
             # il, ir = len(left), len(right)
             # center = ((left[il // 2][0] + right[ir // 2][0]) // 2, (left[il // 2][1] + right[ir // 2][1]) // 2)
+            
+            # if 450 < LY[0] < 640:
             for x, y in zip(LX, LY):
                 cv2.circle(copy, (x, y), 2, (0, 0, 255), -1)
             
+            # if 450 < RY[-1] < 640:
             for x, y in zip(RX, RY):
                 cv2.circle(copy, (x, y), 2, (0, 0, 255), -1)
             
@@ -221,14 +226,14 @@ class lane_detection:
                 #########################
                 print("Detected Nothing") 
                 #########################
-            elif len(LX) < IGNORED:
+            elif len(LX) < IGNORED : # or RY[-1] < 450
                 rpt1 = (min(RX), min(RY))
                 rpt2 = (max(RX), max(RY))
                 rx, ry, rk = self.extendLine(rpt1, rpt2)
                 lx, ly, lk = [RX[0], RY[0], 0]
                 
                 cv2.line(copy, rpt1, (rx, ry), (0, 0, 0), 4)
-            elif len(RX) < IGNORED:
+            elif len(RX) < IGNORED : # or LY[0] < 450
                 lpt1 = (min(LX), max(LY))
                 lpt2 = (max(LX), min(LY))
                 lx, ly, lk = self.extendLine(lpt1, lpt2)
@@ -253,8 +258,8 @@ class lane_detection:
             
             # K = [lk, rk]
             # 보정 계수 조정
-            a = 70
-            b = 40 
+            a = 20
+            b = 7 
             
             if lk == 0 and rk == 0:
                 #########################
@@ -283,29 +288,29 @@ class lane_detection:
                     center[0] -= int(b * abs(abs(rk) - abs(lk)))
                     
             print("center :", center)
-            self.prevRawCenter.append(center[0])
+            # self.prevRawCenter.append(center[0])
             
-            PREVENT_ERROR = 15
-            TURN_SLOWLY = 6 * self.toReduce
-            if self.frameLength > 5 or self.continueToRevise == 1:
-                # for i in range(self.frameLength - 5, self.frameLength):
-                # self.sumError += abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY * (TURN_SLOWLY - 1)
+            # PREVENT_ERROR = 15
+            # TURN_SLOWLY = 6 * self.toReduce
+            # if self.frameLength > 5 or self.continueToRevise == 1:
+            #     # for i in range(self.frameLength - 5, self.frameLength):
+            #     # self.sumError += abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY * (TURN_SLOWLY - 1)
                 
-                if abs(center[0] - self.prevCenter[-1]) > PREVENT_ERROR:
-                    if self.currentDirection == -1:
-                        center[0] = int(self.prevCenter[-1] - abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY) 
-                    if self.currentDirection == 1:
-                        center[0] = int(self.prevCenter[-1] + abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY)
+            #     if abs(center[0] - self.prevCenter[-1]) > PREVENT_ERROR:
+            #         if self.currentDirection == -1:
+            #             center[0] = int(self.prevCenter[-1] - abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY) 
+            #         if self.currentDirection == 1:
+            #             center[0] = int(self.prevCenter[-1] + abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY)
                 
                 
-                self.continueToRevise = 1
-                self.toReduce += 0.03
-                self.prevCenter.append(center[0])
+            #     self.continueToRevise = 1
+            #     self.toReduce += 0.03
+            #     self.prevCenter.append(center[0])
                 
-                self.frameLength += 1
-            else:
-                self.prevCenter.append(center[0])
-                self.frameLength += 1
+            #     self.frameLength += 1
+            # else:
+            #     self.prevCenter.append(center[0])
+            #     self.frameLength += 1
                 
                 
             if center[0] > w // 2:
@@ -315,6 +320,8 @@ class lane_detection:
                 
             cv2.line(copy, (w // 2, h), (w // 2, 0), (255, 255, 255), 2)
             cv2.circle(copy, tuple(center), 10, (0, 255, 0), -1)
+            
+            return center[0] - w // 2 # 최종 steer값 -면 왼쪽, +면 오른쪽
             
         # if (len(right) < 2): 
         #     print("Turn right!!!!")
@@ -361,9 +368,10 @@ class lane_detection:
             # edges = region(edges)
             edges = self.region(edges)
             
-            self.divideLine(edges, copy)
+            steer = self.divideLine(edges, copy)
+            print("steer :", steer)
             cv2.imshow('edges', edges)
-            # cv2.imshow('copy', copy)
+            cv2.imshow('copy', copy)
 
             print("time :", time.time() - current, "s")
             # cv2.imshow('frame', lanes)
