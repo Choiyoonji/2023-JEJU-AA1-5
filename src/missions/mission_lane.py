@@ -344,10 +344,10 @@ class lane_detection:
         return img
     
     def run(self):    
-        cap = cv2.VideoCapture(2)
-        # cap = cv2.VideoCapture(os.getcwd() + "/lane_detection/origin_code(C version)/sample_data/track-s.mkv")
-        # fourcc = cv2.VideoWriter_fourcc(*'X264')
-        # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
+        # cap = cv2.VideoCapture(2)
+        cap = cv2.VideoCapture(os.getcwd() + "/lane_detection/origin_code(C version)/sample_data/track-s.mkv")
+        fourcc = cv2.VideoWriter_fourcc(*'X264')
+        out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
 
         
 
