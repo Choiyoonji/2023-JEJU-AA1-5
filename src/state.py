@@ -11,16 +11,14 @@ import math
 import numpy as np
 
 # message 파일
-from macaron_4.msg import erp_write
+from jeju.msg import erp_write
 
 # 모듈 import
-from global_path import GlobalPath
-from sub_erp_state import sub_erp_state
-from mission_cruising import mission_cruising
-from mission_parking import mission_parking
-from mission_dynamic_obstacle import mission_dynamic_obstacle
-from mission_traffic import mission_traffic_straight, mission_traffic_left
-from mission_delivery import mission_delivery
+from path_planning.global_path import GlobalPath
+from sensor.sub_erp_state import sub_erp_state
+from missions.mission_cruising import mission_cruising
+from missions.mission_parking import mission_parking
+from missions.mission_traffic import mission_traffic_straight, mission_traffic_left
 
 WHERE = 3 # 1 대운동장, 2 K city 예선, 3 K city 본선, 5 대운동장 직선, 6 대운동장 찐 직선
 
@@ -196,7 +194,7 @@ def main():
     Mission_traffic_left = mission_traffic_left(WHERE)
     Mission_delivery = mission_delivery()
 
-    print("국토교통부 장관상 내놔랏!!")
+    print("제주도 박병건 파이팅")
     rospy.sleep(1)
 
     while not rospy.is_shutdown():
