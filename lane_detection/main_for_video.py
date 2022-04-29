@@ -39,6 +39,11 @@ def Canny_Edge_Detection(img):
     return mat_canny_img
 
 def findLinesP(img):
+    img_original = img.copy()
+    edges = cv2.Canny(img, 50, 150, apertureSize=3)
+    
+    linesP = cv2.HoughLinesP(img, 1, np.pi/180, 60, 60, 20)
+    
     
 def findLines(img):
     img_original = img.copy()
@@ -46,77 +51,78 @@ def findLines(img):
     edges = cv2.Canny(img, 50, 150, apertureSize=3)
 
     # lines = cv2.HoughLines(edges, 1, np.pi/180,100)
-    lines = cv2.HoughLinesP(img, 1, np.pi/180, 60, 60, 20)
+    lines = cv2.HoughLines(img, 1, np.pi/180, 60, 60, 20)
 
     max_count = 0
-    # for i in range(lines.shape[0]):
-    #     left_side = []
-    #     right_side = []
+    for i in range(lines.shape[0]):
+        left_side = []
+        right_side = []
         
-    #     # 직진 여부 확인
+        # 직진 여부 확인
 
-    #     count = 0
-    #     for rho, theta in lines[i]:
+        count = 0
+        for rho, theta in lines[i]:
             
-    #         # 중요한 부분 : theta값에 따라 steer값 조절 더 해야함
-    #         if 1.39626 < theta < 1.91986: # 노이즈 제거
-    #             continue
-    #         elif 2 < theta < 2.5:
-    #             print("Turn steer to left")
-    #         elif 0.53 < theta < 1.2:
-    #             print("Turn steer to right")
-    #         elif 0.49 < theta < 0.53:
-    #             print("###########")
-    #             print("###########")
-    #             print("Go straight")
-    #             print("###########")
-    #             print("###########")
-    #         else:
-    #             continue
-    #         a = np.cos(theta)
-    #         b = np.sin(theta)
-    #         x0 = a*rho
-    #         y0 = b*rho
-    #         x1 = int(x0 + 1000*(-b))
-    #         y1 = int(y0+1000*(a))
-    #         x2 = int(x0 - 1000*(-b))
-    #         y2 = int(y0 -1000*(a))
+            # 중요한 부분 : theta값에 따라 steer값 조절 더 해야함
+            if 1.39626 < theta < 1.91986: # 노이즈 제거
+                continue
+            elif 2 < theta < 2.5:
+                print("Turn steer to left")
+            elif 0.53 < theta < 1.2:
+                print("Turn steer to right")
+            elif 0.49 < theta < 0.53:
+                print("###########")
+                print("###########")
+                print("Go straight")
+                print("###########")
+                print("###########")
+            else:
+                continue
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            x1 = int(x0 + 1000*(-b))
+            y1 = int(y0+1000*(a))
+            x2 = int(x0 - 1000*(-b))
+            y2 = int(y0 -1000*(a))
             
-    #         # 차선 외에 다른 건 배제
-    #         if y1 < 0:
-    #             continue
-    #         if 0 < x1 < 640 and 0 < y1 < 240:
-    #             continue
-    #         if 0 < x2 < 640 and 0 < y2 < 240:
-    #             continue
-    #         ################################
-    #         print(rho, theta)
-    #         print(x0, y0, x1, y1, x2, y2)
+            # 차선 외에 다른 건 배제
+            # if y1 < 0:
+            #     continue
+            if 0 < x1 < 640 and 0 < y1 < 240:
+                continue
+            if 0 < x2 < 640 and 0 < y2 < 240:
+                continue
+            ################################
+            print(rho, theta)
+            print(x0, y0, x1, y1, x2, y2)
             
-    #         if count > 2: break
+            if count > 2: break
             
-    #         count += 1
-    #         cv2.circle(img, ((x1 + x2) // 2, (y1 + y2) // 2), 5, (0, 0, 255))
-    #         cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+            count += 1
+            cv2.circle(img, ((x1 + x2) // 2, (y1 + y2) // 2), 5, (0, 0, 255))
+            cv2.line(img, (x1,y1), (x2,y2), color=(0,255,255), thickness=2)
             
-    #     max_count += count
+        max_count += count
         
-    #     if max_count > 5: break
+        if max_count > 15: break
         
-    #     for _, theta in lines[i]:
-    #         if 0.45 < theta < 0.53:
-    #             left_side.append(theta)
-    #         elif 2.68 < theta < 2.82:
-    #             right_side.append(theta)
+        for _, theta in lines[i]:
+            if 0.45 < theta < 0.53:
+                left_side.append(theta)
+            elif 2.68 < theta < 2.82:
+                right_side.append(theta)
             
-    #     if len(left_side) > 4 and len(right_side) > 4:
-    #         print("###########")
-    #         print("###########")
-    #         print("Go straight222222222222")
-    #         print("###########")
-    #         print("###########")
-    #         continue
-    # res = np.vstack((img_original,img))
+        if len(left_side) > 4 and len(right_side) > 4:
+            print("###########")
+            print("###########")
+            print("###Go straight###")
+            print("###########")
+            print("###########")
+            continue
+    res = np.vstack((img_original,img))
+    cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     cv2.imshow('img', img)
 
 def drawLines(img):
@@ -178,14 +184,6 @@ print("Image size[{}, {}]".format(img_width, img_height))
 # cv2.resizeWindow("Canny Edge Image window", img_width, img_height)
 # cv2.moveWindow("Canny Edge Image window", 10, 520)
 
-# cv2.namedWindow("Display window", cv2.WINDOW_NORMAL)
-# cv2.resizeWindow("Display window", img_width, img_height)
-# cv2.moveWindow("Display window", 10, 20)
-# cv2.namedWindow("Gray Image window", cv2.WINDOW_NORMAL)
-# cv2.resizeWindow("Gray Image window", img_width, img_height)
-# cv2.moveWindow("Gray Image window", 700, 20)
-
-count = 0
 images = os.listdir(os.getcwd() + "/lane_detection/sample_image")
 print(images)
 
@@ -210,7 +208,7 @@ while cap.isOpened():
 
     print("Line Number : {}".format(linesP.shape))
     
-    findLines(image_canny_edge)
+    findLines(image_grayscale_overlayed)
     # findLines(image_grayscale_overlayed)
     out.write(frame)
 
