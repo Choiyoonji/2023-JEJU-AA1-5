@@ -82,7 +82,7 @@ int main(void)
 	while(1)
 	{
 	   mat_image_org_color = imread("/home/pi/HancomMDS/AutoCar/C++/OpenCV/6/images/line_2_0.jpg"); 	   
-	   cvtColor(mat_image_org_color,mat_image_org_gray, CV_RGB2GRAY );       // color to gray conversion        
+	   cvtColor(mat_image_org_color,mat_image_org_gray, CV_RGB2GRAY);       // color to gray conversion        
 	   //threshold(mat_image_org_gray,mat_image_canny_edge, 200,255,THRESH_BINARY);
 	   mat_image_canny_edge = Canny_Edge_Detection(mat_image_org_gray);	
 	   image = Perspective(mat_image_canny_edge);
