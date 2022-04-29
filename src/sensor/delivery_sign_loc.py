@@ -9,6 +9,8 @@
 # delivery_sign_loc.run() 한번 해주고 (지금까지 누적해온 장애물 좌표를 바탕으로 표지판 좌표를 계산하는 함수)
 # delivery_sign_loc.PJ[0] 을 읽어오면 표지판 위치가 [x, y] 로 저장되어 있을 꺼임 
 
+##hahahahaha
+
 import rospy
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/missions")
