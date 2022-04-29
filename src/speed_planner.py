@@ -17,10 +17,11 @@ from std_msgs.msg import Float64
 # 곡률에따른 속도제어
 MAX__SPEED = 200
 MIN___SPEED = 90 # 평상시
-STATIC_MIN___SPEED = 70 # 정적 장애물
 
 # MODE 1이면 곡률제어, 2이면 yaw값 비교 제어
 MODE = 2
+#track
+#MODE = 1
 
 # 초기값
 MIN__SPEED = 0
@@ -29,6 +30,7 @@ class Integral_control():
     def __init__(self, time):
         self.I_value = 0
         self.Ki = 0.25
+        #self.Ki = 0.5
         self.time = time
     
     def I_control(self, error):
@@ -38,6 +40,7 @@ class Integral_control():
             self.I_value = 0
         if self.I_value >= 80:
             self.I_value = 80
+            #self.I_value = 40
 
         return self.Ki * self.I_value
 
@@ -46,6 +49,7 @@ class Integral_control():
 class speed_planner():
     def __init__(self):
         self.Kp = 3.5           # Speed PID control에서 Proportional 계수
+        #self.Kp = 2.0 
         self.Kp_brake = 2     # Brake PID control에서 Proportional 계수
         self.Kp_reverse = 4   # 후진 Proportional 계수
         
@@ -94,6 +98,7 @@ class speed_planner():
         alpha = 0.5 # 직전 값을 얼마나 반영할건지
         if MODE == 1:
             if value.data > 2.0:
+                #value.data > 1.5
                 pass
             else:
                 # low pass filter
@@ -136,6 +141,7 @@ class speed_planner():
             if self.max_curvature <= 20 * pi / 180:
                 target_speed = MAX__SPEED
             elif self.max_curvature >= 70 * pi / 180:
+                #self.max_curvature >= 60 * pi / 180:
                 target_speed = MIN__SPEED
             else:
                 target_speed = int(((MIN__SPEED - MAX__SPEED)/(70*pi/180 - 20*pi/180)) * (self.max_curvature - 20*pi/180) + MAX__SPEED)
@@ -203,6 +209,7 @@ class speed_planner():
         # 급정지 상황
         elif self.target_speed == -201:
             brake = 110 # 동적 장애물 코스에서 속도가 50이라서
+            #brake = 80
             self.brake_flag = 0
 
         # 후진 상황
