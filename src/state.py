@@ -17,6 +17,9 @@ from jeju.msg import erp_write
 from path_planning.global_path import GlobalPath
 from sensor.sub_erp_state import sub_erp_state
 from missions.mission_cruising import mission_cruising
+# from missions.mission_track import mission_track
+import state_track as mission_track
+from missions.mission_lane import lane_detection
 from missions.mission_traffic import mission_traffic_straight, mission_traffic_left
 
 WHERE = 7 # 1 대운동장, 2 K city 예선, 3 K city 본선, 5 대운동장 직선, 6 대운동장 찐 직선
@@ -120,24 +123,19 @@ class Mission_State():
 
         self.mission_zone = self.mission_zone_trf = 0
 
-        if (distance(mission_coord["Parking"], s)):
+        if (distance(mission_coord["lane1"], s)):
             self.mission_zone = 1
-        elif (distance(mission_coord["Dynamic_Obstacle"], s)):
+        elif (distance(mission_coord["obstacle1"], s)):
             self.mission_zone = 2
-        elif (distance(mission_coord["Static_Obstacle"], s)):
+        elif (distance(mission_coord["track"], s)):
             self.mission_zone = 3
-        elif (distance(mission_coord["Delivery"], s)):
+        elif (distance(mission_coord["obstacle2"], s)):
             self.mission_zone = 4
-        elif (distance(mission_coord["School_Zone"], s)):
+        elif (distance(mission_coord["lane2"], s)):
             self.mission_zone = 5
-        
-        for i in mission_coord["Traffic_light_straight"]:
-            if (distance(i, s)):
-                self.mission_zone_trf = 8
-            
-        for i in mission_coord["Traffic_light_left"]:
-            if (distance(i, s)):
-                self.mission_zone_trf = 9
+        elif (distance(mission_coord["school_zone"], s)):
+            self.mission_zone = 6
+
 
     def mission_update(self, s):
         self.mission_loc(s)
@@ -156,24 +154,24 @@ class Mission_State():
             elif self.mission_ing == 2:
                 self.mission_state = 0
 
-        if (self.mission_zone_trf == 8) or (self.mission_zone_trf == 9):
-            if self.mission_ing_trf == 0:
-                print("신호등 인식 시작")
-                self.mission_ing_trf = 1
-            elif self.mission_ing_trf == 1:
-                pass
-            elif self.mission_ing_trf == 2:
-                pass
-        else:
-            self.mission_ing_trf = 0
+        # if (self.mission_zone_trf == 8) or (self.mission_zone_trf == 9):
+        #     if self.mission_ing_trf == 0:
+        #         print("신호등 인식 시작")
+        #         self.mission_ing_trf = 1
+        #     elif self.mission_ing_trf == 1:
+        #         pass
+        #     elif self.mission_ing_trf == 2:
+        #         pass
+        # else:
+        #     self.mission_ing_trf = 0
 
     def mission_done(self):
         print("미션 완료")
         self.mission_ing = 2
     
-    def mission_done_trf(self):
-        print("신호등 미션 완료")
-        self.mission_ing_trf = 2
+    # def mission_done_trf(self):
+    #     print("신호등 미션 완료")
+    #     self.mission_ing_trf = 2
 
 def main():
     global WHERE
@@ -190,14 +188,11 @@ def main():
     GB = GlobalPath(gp_name)
 
     # 미션 선언
-    Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
-    Mission_parking = mission_parking(WHERE)
-    Mission_dynamic_obstacle = mission_dynamic_obstacle(WHERE)
-    Mission_traffic_straight = mission_traffic_straight(WHERE)
-    Mission_traffic_left = mission_traffic_left(WHERE)
-    Mission_delivery = mission_delivery()
+    Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    
+    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
+    # Mission_delivery = mission_delivery()
 
-    print("제주도 박병건 파이팅")
+    print("제주도 마카롱 파이팅")
     rospy.sleep(1)
 
     while not rospy.is_shutdown():
@@ -210,59 +205,51 @@ def main():
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = CRUISING_SPEED
             
-        elif (MS.mission_state == 1): # 주차 모드
-            if Mission_parking.done == True:
-                rospy.sleep(2)
-                MS.mission_done()
-                Mission_parking.reset()
-            speed, steer = Mission_parking.run(erp.pose, erp.heading, erp.obs, erp.lane_dis, erp.erp_ENC, erp.erp_steer)
-            if s < 87.0:
-                steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
+        elif (MS.mission_state == 1): # 첫번째 차선인식
+            steer = lane_detection.run()
 
-        elif (MS.mission_state == 2): # 동적장애물 모드
-            steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
-            speed = 80
-            if Mission_dynamic_obstacle.scan(erp.pose, erp.obs) == "stop":
-                speed = -201
+        elif (MS.mission_state == 2): # 정적장애물 모드
+            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
+            speed = 121
 
-        elif (MS.mission_state == 3): # 정적장애물 모드
+        elif (MS.mission_state == 3): # 트랙
+            mission_track.main()
+        
+        elif (MS.mission_state == 4): # 정적 장애물 모드
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
             speed = 121
         
-        elif (MS.mission_state == 4): # 배달 모드
-            speed, steer, st_del = Mission_delivery.run(erp.pose, erp.heading, erp.delivery, erp.obs, s)
-            if st_del == 1 :
-                steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
-            elif st_del == 2:
-                MS.mission_done()
-        
-        elif (MS.mission_state == 5): # 감속 모드
+        elif (MS.mission_state == 5): # 감속 모드, 차선인식
+            steer = lane_detection.run()
+            speed = 50
+
+        elif (MS.mission_state == 6): # 감속 모드
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = 100
         
-        if (MS.mission_zone_trf == 8): # 직진 신호등 교차로 모드
-            for i in mission_coord["Traffic_light_straight"]:
-                if i[1] - 3 <= s <= i[1]:
-                    MS.mission_done_trf()
-                    Mission_traffic_straight.reset()
-            speed_traffic = Mission_traffic_straight.run(s, erp.trffic, erp.erp_speed)
-            if speed_traffic <= speed:
-                speed = speed_traffic
-            if Mission_traffic_straight.done == True:
-                MS.mission_done_trf()
-                Mission_traffic_straight.reset()
+        # if (MS.mission_zone_trf == 8): # 직진 신호등 교차로 모드
+        #     for i in mission_coord["Traffic_light_straight"]:
+        #         if i[1] - 3 <= s <= i[1]:
+        #             MS.mission_done_trf()
+        #             Mission_traffic_straight.reset()
+        #     speed_traffic = Mission_traffic_straight.run(s, erp.trffic, erp.erp_speed)
+        #     if speed_traffic <= speed:
+        #         speed = speed_traffic
+        #     if Mission_traffic_straight.done == True:
+        #         MS.mission_done_trf()
+        #         Mission_traffic_straight.reset()
         
-        elif (MS.mission_zone_trf == 9): # 좌회전 신호등 교차로 모드
-            for i in mission_coord["Traffic_light_left"]:
-                if i[1] - 3 <= s <= i[1]:
-                    MS.mission_done_trf()
-                    Mission_traffic_left.reset()
-            speed_traffic = Mission_traffic_left.run(s, erp.trffic, erp.erp_speed)
-            if speed_traffic <= speed:
-                speed = speed_traffic
-            if Mission_traffic_left.done == True:
-                MS.mission_done_trf()
-                Mission_traffic_left.reset()
+        # elif (MS.mission_zone_trf == 9): # 좌회전 신호등 교차로 모드
+        #     for i in mission_coord["Traffic_light_left"]:
+        #         if i[1] - 3 <= s <= i[1]:
+        #             MS.mission_done_trf()
+        #             Mission_traffic_left.reset()
+        #     speed_traffic = Mission_traffic_left.run(s, erp.trffic, erp.erp_speed)
+        #     if speed_traffic <= speed:
+        #         speed = speed_traffic
+        #     if Mission_traffic_left.done == True:
+        #         MS.mission_done_trf()
+        #         Mission_traffic_left.reset()
 
         # 속도를 줄이자 헿
         if 529 < s < 552 or 1108 < s < 1162:

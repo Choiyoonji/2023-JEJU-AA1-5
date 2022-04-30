@@ -16,7 +16,6 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/
 
 # 모듈 import
 from missions.mission_track import mission_track, path_planning, visual, lidar_zed_matching
-from jeju.msg import erp_write
 
 
 # Parameter
@@ -27,8 +26,8 @@ class sub_erp_state:
     def __init__(self):
         #구독자 선언
         self.obs_sub = rospy.Subscriber('/object', PointCloud, self.obs_callback, queue_size=1)
-        self.blue_rubber_sub = rospy.Subscriber('/blue_rubber', PointCloud, self.right_rubber_callback, queue_size = 1)
-        self.yellow_rubber_sub = rospy.Subscriber('/yellow_rubber', PointCloud, self.left_rubber_callback, queue_size = 1)
+        # self.blue_rubber_sub = rospy.Subscriber('/blue_rubber', PointCloud, self.right_rubber_callback, queue_size = 1)
+        # self.yellow_rubber_sub = rospy.Subscriber('/yellow_rubber', PointCloud, self.left_rubber_callback, queue_size = 1)
         self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
 
         #Sub 받은 데이터 저장 공간
@@ -90,13 +89,13 @@ def main():
     while not rospy.is_shutdown():
 
         # 라이다 라바콘 받아오기
-        # right, left = track.divide(Data.obs)
-        # L = track.cluster(np.array(left))
-        # R = track.cluster(np.array(right))
-        # L_f = track.filter(L)
-        # R_f = track.filter(R)
-        clus = track.cluster(np.array(Data.obs))
-        fin_clus = track.filter(clus)
+        right, left = track.divide(Data.obs)
+        L = track.cluster(np.array(left))
+        R = track.cluster(np.array(right))
+        L_f = track.filter(L)
+        R_f = track.filter(R)
+        # clus = track.cluster(np.array(Data.obs))
+        # fin_clus = track.filter(clus)
         # print(fin_clus)
         
         
@@ -105,9 +104,9 @@ def main():
         # Combine.extend(L_f)
 
         # print(fin_clus)
-        v.pub_lidar_vis(fin_clus)
+        # v.pub_lidar_vis(fin_clus)
         # 라이다 제드 매칭
-        Left_final, Right_final = Match.match(fin_clus, Data.zed_left_rubber, Data.zed_right_rubber)
+        ### Left_final, Right_final = Match.match(fin_clus, Data.zed_left_rubber, Data.zed_right_rubber)
         # Left_final = L_f
         # Right_final = R_f
         # # Spline
@@ -118,14 +117,14 @@ def main():
         # Center_Path = Path.combine(Right_x, Right_y, Left_x, Left_y)
         # steer = Path.tracking(Center_Path)
 
-        # pub.pub_erp(SPEED, steer)
-        v.pub_left_final_vis(Left_final)
-        v.pub_right_final_vis(Right_final)
+        # # pub.pub_erp(SPEED, steer)
+        # v.pub_left_final_vis(Left_final)
+        # v.pub_right_final_vis(Right_final)
         # Spline
-        Left_x, Left_y = Path.spline(Left_final)
-        Right_x, Right_y = Path.spline(Right_final)
-        v.pub_left_path_vis(Left_x, Left_y)
-        v.pub_right_path_vis(Right_x, Right_y)
+        Left_x, Left_y = Path.spline(L_f)
+        Right_x, Right_y = Path.spline(R_f)
+        # v.pub_left_path_vis(Left_x, Left_y)
+        # v.pub_right_path_vis(Right_x, Right_y)
 
         # 가운데 경로
         Center_Path = Path.combine(Right_x, Right_y, Left_x, Left_y)
