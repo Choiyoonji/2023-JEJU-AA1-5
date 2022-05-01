@@ -11,8 +11,11 @@ from global_path import GlobalPath
 
 # Parameter
 # path_name = .npy
+path_name = 'man_jeju1.npy'
 # coord = [[x1,y1],
 #          [x2,y2]] -> 미션 시작 좌표들(s좌표 알고 싶은 좌표들)
+coord = [[ 955769.197919,1951256.52838502],
+[ 955779.7380959,1951232.26337469]]
 # 이렇게 설정하고 코드 돌리면 coord의 s좌표가 나옴 
 
 class find_s:

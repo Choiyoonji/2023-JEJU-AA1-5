@@ -12,8 +12,8 @@ from sensor.dbscan_track import DBSCAN
 from geometry_msgs.msg import Point, Point32
 from sensor_msgs.msg import PointCloud
 import scipy.interpolate as interp
-from path_planning.path_planning_tracking import Path_Tracking
-from path_planning.global_path import GlobalPath
+from path_planning_tracking import Path_Tracking
+from global_path import GlobalPaths
 
 # Parameters
 WB = 1.03  # [m] wheel base of vehicle

@@ -7,12 +7,12 @@ import os, sys
 import numpy as np
 
 # 필요한 Library
-from pure_pursuit_clean import pid_control, pure_pursuit
+from pure_pursuit_PID import pid_control, pure_pursuit
 from trajectory_planner_track import TrajectoryPlanner
 from global_path import GlobalPath 
 
 # msg 파일
-from macaron_4.msg import erp_read
+from jeju.msg import erp_read
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 

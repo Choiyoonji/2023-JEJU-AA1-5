@@ -8,7 +8,7 @@ import math
 import numpy as np
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/path_planning")
-from path_planning_ing import Path_Tracking
+from path_planning_tracking import Path_Tracking
 
 class mission_cruising:
 
