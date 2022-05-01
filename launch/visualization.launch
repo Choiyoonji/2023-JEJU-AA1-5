@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+
+
+    <node name="rviz" pkg="rviz" type="rviz" 
+    args="-d $(find jeju)/riz_test.rviz" />
+
+    <node name="visualization" pkg="jeju"  type="visualization.py"
+    output="screen"/>
+
+    
+</launch>
