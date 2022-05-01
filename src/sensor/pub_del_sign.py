@@ -4,7 +4,7 @@ import rospy
 import os, sys
 import numpy as np
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/src/sensor")
-from macaron_3.msg import erp_read,obj_info
+from jeju.msg import erp_read,obj_info
 from sub_erp_state import sub_erp_state
 
 point_1 = [935654.06, 1916124.191]
