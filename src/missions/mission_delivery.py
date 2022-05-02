@@ -11,7 +11,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/path_planning")
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/sensor")
 from global_path import GlobalPath
-from path_planning_ing import Path_Tracking
+from path_planning_tracking import Path_Tracking
 from delivery_sign_loc import delivery_sign_loc as del_sign
 
 turn_end = 701.8

@@ -12,7 +12,7 @@ from math import sin, cos, tan, pi, isnan
 import os, sys
 #sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from global_path import GlobalPath
-import polynomial as polynomial
+import polynominal as polynomial
 import frenet_path as frenet_path
 
 # Cost Weight

@@ -21,5 +21,5 @@ class mission_cruising:
         return steer
 
     def static_obstacle(self, pose, heading, obs):
-        steer = self.PT.gps_tracking(pose, heading, obs, path_num = 5)
+        steer = self.PT.gps_tracking(pose, heading, obs, path_num = 1)
         return steer

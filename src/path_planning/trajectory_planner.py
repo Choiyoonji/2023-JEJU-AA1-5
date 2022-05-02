@@ -13,7 +13,7 @@ from math import sin, cos, tan, pi, isnan
 import os, sys
 #sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from global_path import GlobalPath
-import polynomial as polynomial
+import polynominal as polynomial
 import frenet_path as frenet_path
 
 # Cost Weight
@@ -38,8 +38,8 @@ class TrajectoryPlanner: # path planner
         PATH_ROOT=(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/" #/home/gigi/catkin_ws/src/macaron_3/
         self.center = []
         #self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "curb_PJ1.npy")) # 팔정도
-        self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "kcity_tryout_solidline.npy")) #kcity
-        self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "kcity_final_busline.npy")) #kcity
+        # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "kcity_tryout_solidline.npy")) #kcity
+        # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "kcity_final_busline.npy")) #kcity
         # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "PG_solidline.npy")) #대운동장
        
         self.candidate_pub = rospy.Publisher('/CDpath', PointCloud, queue_size = 3)

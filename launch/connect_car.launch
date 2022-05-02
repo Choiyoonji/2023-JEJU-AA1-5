@@ -6,8 +6,8 @@
     <node name="serial_node" pkg="jeju"  type="serial_node"
     />
 
-    <!-- <node name="speed_panner" pkg="macaron_4"  type="speed_planner.py"
-    output="screen"/> -->
+    <node name="speed_panner" pkg="jeju"  type="speed_planner.py"
+    output="screen"/>
 
     
 </launch>

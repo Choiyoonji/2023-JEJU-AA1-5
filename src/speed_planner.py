@@ -15,8 +15,8 @@ from jeju.msg import erp_write
 from std_msgs.msg import Float64
 
 # 곡률에따른 속도제어
-MAX__SPEED = 200
-MIN___SPEED = 90 # 평상시
+MAX__SPEED = 100
+MIN___SPEED = 60 # 평상시
 
 # MODE 1이면 곡률제어, 2이면 yaw값 비교 제어
 MODE = 2
@@ -124,7 +124,7 @@ class speed_planner():
         global MIN__SPEED, MIN___SPEED, STATIC_MIN___SPEED
         max_speed = abs(max_spd)
         # 정적 장애물
-        if max_spd == 121:
+        if max_spd == 80:
             MIN__SPEED = STATIC_MIN___SPEED
         else:
             MIN__SPEED = MIN___SPEED

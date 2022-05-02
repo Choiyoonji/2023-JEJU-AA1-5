@@ -26,14 +26,10 @@ class sub_erp_state:
     def __init__(self):
         #구독자 선언
         self.obs_sub = rospy.Subscriber('/object', PointCloud, self.obs_callback, queue_size=1)
-        # self.blue_rubber_sub = rospy.Subscriber('/blue_rubber', PointCloud, self.right_rubber_callback, queue_size = 1)
-        # self.yellow_rubber_sub = rospy.Subscriber('/yellow_rubber', PointCloud, self.left_rubber_callback, queue_size = 1)
         self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
 
         #Sub 받은 데이터 저장 공간
         self.obs = [[]]
-        self.zed_left_rubber = [[0, 0]]
-        self.zed_right_rubber = [[0, 0]]
         self.erp_speed = 0.0
         self.erp_steer = 0.0
         self.erp_ENC = 0.0
