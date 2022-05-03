@@ -37,15 +37,15 @@ if WHERE == 1: # 동국대 직선
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
-    mission_coord = {"crusing" : [0, 125], "Static_Obstacle" : [362.5, 409.8],
+    mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [362.5, 409.8],
                     "Dynamic_Obstacle" : [224.6, 305.0], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],
                     "Traffic_light_straight" : [[110.3 - 15.0, 110.3 + 4.0],
                                                 [248.6 - 15.0, 248.6 + 4.0]], # 110.3, 248.6
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
-    GLOBAL_PATH_NAME = "jeju_island3.npy"
-    mission_coord = {"Parking" : [77.0, 135.5], "Static_Obstacle" : [286.5, 351.5],
+    GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
+    mission_coord = {"Parking" : [0.0, 133.0], "Static_Obstacle" : [286.5, 351.5],
                     "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [827.0, 856.0], "Delivery" : [376.0, 754.3],
                     "Traffic_light_straight" : [[178.2 - 15.0, 178.2 + 4.0],
