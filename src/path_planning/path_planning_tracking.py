@@ -29,7 +29,7 @@ class Path_Tracking():
         if Variable_LD == True:
             self.erp_speed = 0.0
             self.erp_steer = 0.0
-            self.erp_ENC = 0.0
+            # self.erp_ENC = 0.0
             self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
 
         if file == 0:
@@ -46,9 +46,9 @@ class Path_Tracking():
     def erp_callback(self, data):
         self.erp_speed = data.read_speed
         self.erp_steer = data.read_steer
-        self.erp_ENC = data.read_ENC
-        if data.read_gear == 2 and self.erp_speed > 0:
-            self.erp_speed *= -1
+        # self.erp_ENC = data.read_ENC
+        # if data.read_gear == 2 and self.erp_speed > 0:
+        #     self.erp_speed *= -1
     
     def det_LD(self):
         ld = int(((self.erp_speed - 100 + 6)/10) + 10) + 3
@@ -65,9 +65,9 @@ class Path_Tracking():
         Kd = (-10 / 10) * (self.erp_speed - 150) + 270
 
 
-        if self.erp_speed >= 180:
+        if self.erp_speed >= 95: #original 180
             Kd = 50
-        elif self.erp_speed >= 110:
+        elif self.erp_speed >= 85: #original 110
             Kd = 150
         else:
             Kd = 400
@@ -85,7 +85,8 @@ class Path_Tracking():
     # ld는 Tracking 할 때 몇 인덱스 앞의 점을 추적할지. 
     # (전역경로 상의 거리가 0.5m 이므로 ld가 7 이면 3.5m 앞의 점을 추적)
 
-    def gps_tracking(self, pose, heading, obs_xy , path_len, ld, path_num, speed):
+    def gps_tracking(self, pose, heading, obs_xy , path_len=4, ld=8, path_num=1): # speed removed
+        #self, pose, heading, obs_xy = [[0.0, 0.0]], path_len = 4, ld = 8, path_num = 1
         x, y = pose[0], pose[1]
 
         # 경로 생성 및 선택   

@@ -21,7 +21,7 @@ from mission_cruising import mission_cruising
 # from mission_track import mission_track, path_planning
 
 
-WHERE = 1
+WHERE = 4
 
 CRUISING_SPEED = 60
 
@@ -43,6 +43,7 @@ elif WHERE == 2: # jeju track -> traffic none, ccw-cw
                     "Traffic_light_straight" : [[110.3 - 15.0, 110.3 + 4.0],
                                                 [248.6 - 15.0, 248.6 + 4.0]], # 110.3, 248.6
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
+
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
     GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
     mission_coord = {"Parking" : [0.0, 133.0], "Static_Obstacle" : [286.5, 351.5],
@@ -59,11 +60,11 @@ elif WHERE == 3: # jeju track -> traffic available, cw-ccw
                     "Traffic_light_left" : [[1079.5 - 15.0, 1079.5 + 4.0],
                                             [1079.5 - 15.0, 1079.5 + 4.0]]} # 엥 좌회전 한번이네 1043.2
 
-elif WHERE == 4: # 만해 배달 테스트
-    GLOBAL_PATH_NAME = "MH_D.npy" 
+elif WHERE == 4: # jeju track -> traffic none, ccw-cw
+    GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [9999, 9999], "Delivery" : [6, 1000],
+                    "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],
                     "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
                                                 [9106.8 - 15.0, 9106.8 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -145,7 +146,7 @@ class Mission_State():
     def mission_update(self, s):
         self.mission_loc(s)
 
-        if (self.mission_zone == 0): # 현재 미션존이 아니라면 무조건 크루징 모드
+        if (self.mission_zone == 0): # if not in mission zone -> cruising!
             self.mission_state = self.mission_zone
             self.mission_ing = 0
 
@@ -222,7 +223,8 @@ def main():
 
         # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
         # if 529 < s < 552 or 1108 < s < 1162:
-        #     speed = 100
+        if 122 < s:
+            speed = 0
 
         pub.pub_erp(speed, steer)
         # print(erp.trffic, 'traffic_info')

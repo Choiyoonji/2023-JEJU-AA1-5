@@ -16,7 +16,7 @@ from std_msgs.msg import Float64
 
 # 곡률에따른 속도제어
 MAX__SPEED = 100
-MIN___SPEED = 60 # 평상시
+MIN___SPEED = 80 # 평상시
 
 # MODE 1이면 곡률제어, 2이면 yaw값 비교 제어
 MODE = 2
@@ -24,7 +24,7 @@ MODE = 2
 #MODE = 1
 
 # 초기값
-MIN__SPEED = 0
+MIN__SPEED = 60
 
 class Integral_control():
     def __init__(self, time):
@@ -59,8 +59,8 @@ class speed_planner():
         self.steer = 0
 
         self.max_curvature = 0
-        self.max_speed = 0
-        self.min_speed = 200
+        self.max_speed = 0  #??
+        self.min_speed = 100 ##??
         self.min_time = 0
         
         self.brake_flag = 0
@@ -78,7 +78,7 @@ class speed_planner():
         self.max_speed = data.write_speed
         self.steer = data.write_steer
 
-        if (self.max_speed >= -200) and (self.max_speed <= 200):
+        if (self.max_speed >= -100) and (self.max_speed <= 100):
             self.target_speed = self.det_target_speed(self.max_speed)
         else:
             self.target_speed = self.max_speed
@@ -90,9 +90,9 @@ class speed_planner():
 
     def erp_callback(self, data):
         self.current_speed = data.read_speed
-        self.erp_ENC = data.read_ENC
-        if data.read_gear == 2 and self.current_speed > 0:
-            self.current_speed *= -1
+        # self.erp_ENC = data.read_ENC
+        # if data.read_gear == 2 and self.current_speed > 0:
+        #     self.current_speed *= -1
 
     def curvature_callback(self, value):
         alpha = 0.5 # 직전 값을 얼마나 반영할건지
@@ -106,8 +106,8 @@ class speed_planner():
         elif MODE == 2:
             self.max_curvature = self.max_curvature * alpha + (1 - alpha) * value.data
 
-    def pub_serial(self, speed, brake, gear):
-        speed, self.steer, brake, gear = int(speed), int(self.steer), int(brake), int(gear)
+    def pub_serial(self, speed, brake): #gear removed
+        speed, self.steer, brake = int(speed), int(self.steer), int(brake)
         if brake <= 1:
             brake = 1
         elif brake >= 200:
@@ -116,7 +116,7 @@ class speed_planner():
         self.erp.write_speed = speed
         self.erp.write_steer = self.steer
         self.erp.write_brake = brake
-        self.erp.write_gear = gear
+        # self.erp.write_gear = gear
 
         self.erp_pub.publish(self.erp)
 
@@ -146,8 +146,8 @@ class speed_planner():
             else:
                 target_speed = int(((MIN__SPEED - MAX__SPEED)/(70*pi/180 - 20*pi/180)) * (self.max_curvature - 20*pi/180) + MAX__SPEED)
 
-        if target_speed >= 200:
-            target_speed = 200
+        if target_speed >= 100:
+            target_speed = 100
         elif target_speed <= 0:
             target_speed = 0
 
@@ -160,7 +160,7 @@ class speed_planner():
         if max_spd > 0 and self.min_time > time.time():
             target_speed = self.min_speed
         else:
-            self.min_speed = 200
+            self.min_speed = 100
 
         if target_speed >= max_speed:
             target_speed = max_speed
@@ -171,7 +171,7 @@ class speed_planner():
         return target_speed
 
     def speed_planner(self):
-        speed, brake, gear = 0, 1, 0
+        speed, brake = 0, 1 #gear removed
 
         # 주행 상황
         if self.target_speed > 0:
@@ -224,11 +224,11 @@ class speed_planner():
             # 속도를 많이 줄여야 한다면
             if self.target_speed - self.current_speed > 10:
                 brake = self.Kp_brake * (self.target_speed - self.current_speed)
-            gear = 2
+            # gear = 2
             self.brake_flag = 0
 
-        if speed >= 200:
-            speed = 200
+        if speed >= 100:
+            speed = 100
         elif speed <= 0:
             speed = 0
         
@@ -237,7 +237,7 @@ class speed_planner():
         elif brake <= 1:
             brake = 1
 
-        return speed, brake, gear
+        return speed, brake #gear removed
 
 def main():
     rospy.init_node("speed_planner", anonymous=True)
@@ -246,8 +246,8 @@ def main():
 
     sp = speed_planner()
     while not rospy.is_shutdown():
-        speed, brake, gear = sp.speed_planner()
-        sp.pub_serial(speed, brake, gear)
+        speed, brake = sp.speed_planner() #gear removed
+        sp.pub_serial(speed, brake)
         
         print("cu, max, target, brake",sp.current_speed, sp.max_speed, sp.target_speed, brake)
         if MODE == 1:
