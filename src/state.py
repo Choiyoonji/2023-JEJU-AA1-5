@@ -12,7 +12,7 @@ import numpy as np
 
 # message 파일
 from jeju.msg import erp_write
-# from sensor_msgs import PointCloudz
+from sensor_msgs import PointCloud
 
 # 모듈 import
 from global_path import GlobalPath
@@ -35,16 +35,16 @@ if WHERE == 1: # 동국대 직선
                                                 [149998.9 - 9.0, 199948.9 + 4.0]], # 148.9
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
 
-elif WHERE == 2: # kcity 예선
-    GLOBAL_PATH_NAME = "kcity_tryout.npy"
-    mission_coord = {"Parking" : [9999, 9999], "Static_Obstacle" : [362.5, 409.8],
+elif WHERE == 2: # jeju track -> traffic none, ccw-cw
+    GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
+    mission_coord = {"crusing" : [0, 125], "Static_Obstacle" : [362.5, 409.8],
                     "Dynamic_Obstacle" : [224.6, 305.0], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],
                     "Traffic_light_straight" : [[110.3 - 15.0, 110.3 + 4.0],
                                                 [248.6 - 15.0, 248.6 + 4.0]], # 110.3, 248.6
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
-elif WHERE == 3: # kcity 본선
-    GLOBAL_PATH_NAME = "kcity_final.npy"
+elif WHERE == 3: # jeju track -> traffic available, cw-ccw
+    GLOBAL_PATH_NAME = "jeju_island3.npy"
     mission_coord = {"Parking" : [77.0, 135.5], "Static_Obstacle" : [286.5, 351.5],
                     "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [827.0, 856.0], "Delivery" : [376.0, 754.3],
@@ -204,13 +204,13 @@ def main():
         print(s), 'current s'
         state = MS.mission_update(s)
 
-        if (MS.mission_state == 1): # 크루징(디폴트) 모드 (장애물 회피 X)
+        if (MS.mission_state == 0): # 크루징(디폴트) 모드 (장애물 회피 X)
             print("크루징---")
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = CRUISING_SPEED
             
 
-        elif (MS.mission_state == 0): # 정적장애물 모드
+        elif (MS.mission_state == 1): # 정적장애물 모드
             print("피해")
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
             speed = CRUISING_SPEED
