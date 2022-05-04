@@ -1,5 +1,9 @@
-#!/usr/local/bin/python3
-#-*- coding: utf-8 -*-
+# #!/usr/bin/env python
+# -- coding: utf-8 --
+import rospy
+from math import pi
+
+import os, sys
 import cv2
 import cv2
 from matplotlib import image
@@ -7,6 +11,18 @@ import concurrent.futures
 import numpy as np
 import time
 import os
+
+from jeju.msg import erp_read
+from jeju.msg import erp_write
+from std_msgs.msg import Float64
+
+class erp_pubpub:
+    def __init__(self):
+        self.erp_pub = rospy.Publisher("erp_write", erp_write, queue_size=1)
+        self.erp = erp_write()
+
+        self.steer = 0
+
 
 class lane_detection:
     def __init__(self):
@@ -342,6 +358,24 @@ class lane_detection:
         
         
         return img
+###############################################################333
+    # def erp_callback(self, data):
+    #     self.erp_speed = data.read_speed
+    #     self.erp_steer = data.read_steer
+
+    # def pub_serial(self, speed): #gear removed
+    #     speed, self.steer = int(speed), int(self.steer)
+    #     speed = 60 #fixed
+    #     # if brake <= 1:
+    #     #     brake = 1
+    #     # elif brake >= 200:
+    #     #     brake = 200
+
+    #     self.erp.write_speed = speed
+    #     self.erp.write_steer = self.steer
+
+    #     self.erp_pub.publish(self.erp)
+    # self.erp.write_brake = brake
     
     def run(self):    
         # cap = cv2.VideoCapture(2)

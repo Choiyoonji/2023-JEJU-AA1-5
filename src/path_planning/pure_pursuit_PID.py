@@ -16,9 +16,9 @@ k = 0.15  # look forward gain
 Lfc = 2.0  # [m] look-ahead distance
 Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
-WB = 1.03  # [m] wheel base of vehicle
-MAX_STEER = 2000
-MIN_STEER = -2000
+WB = 0.73  # [m] wheel base of vehicle #original 1.03
+MAX_STEER = 100
+MIN_STEER = -100
 
 class visual:
     def __init__(self):

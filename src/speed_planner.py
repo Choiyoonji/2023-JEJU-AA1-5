@@ -83,10 +83,10 @@ class speed_planner():
         else:
             self.target_speed = self.max_speed
 
-        if self.steer >= 2000:
-            self.steer = 2000
-        elif self.steer <= -2000:
-            self.steer = -2000
+        if self.steer >= 100:
+            self.steer = 100
+        elif self.steer <= -100:
+            self.steer = -100
 
     def erp_callback(self, data):
         self.current_speed = data.read_speed
@@ -239,6 +239,8 @@ class speed_planner():
 
         return speed, brake #gear removed
 
+###########################################
+# 주행 할때는 끄고 함수만 호출되는거임.
 def main():
     rospy.init_node("speed_planner", anonymous=True)
 

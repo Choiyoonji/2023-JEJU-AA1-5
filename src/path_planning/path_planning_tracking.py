@@ -129,10 +129,10 @@ class Path_Tracking():
         P_steer = self.PP.get_steer_state(x, y, heading, ld, goal)
         PID_steer = P_steer + Kd * D_steer + Ki * I_steer + 0 # 5는 얼라이먼트 보정값
         
-        if PID_steer >= 2000:
-            PID_steer = 2000
-        elif PID_steer <= -2000:
-            PID_steer = -2000
+        if PID_steer >= 100:
+            PID_steer = 100
+        elif PID_steer <= -100:
+            PID_steer = -100
 
         # print(P_steer, Kd * D_steer, Ki * I_steer, PID_steer, 'P, D, I, Total')
         # print(Ki*I_steer, Kd * D_steer, PID_steer, 'i, D, total')
