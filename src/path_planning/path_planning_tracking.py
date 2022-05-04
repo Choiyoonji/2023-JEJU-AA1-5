@@ -10,6 +10,7 @@ import numpy as np
 from pure_pursuit_PID import pid_control, pure_pursuit
 from trajectory_planner import TrajectoryPlanner
 from global_path import GlobalPath 
+from std_msgs import Int16, Int32
 
 # msg 파일
 from jeju.msg import erp_read
@@ -30,7 +31,9 @@ class Path_Tracking():
             self.erp_speed = 0.0
             self.erp_steer = 0.0
             # self.erp_ENC = 0.0
-            self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
+            # self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
+            self.erp_sub_speed= rospy.Subscriber('speed_read', erp_read, self.erp_callback_speed, queue_size=1)
+            self.erp_sub_steer= rospy.Subscriber('steer_read',erp_read, self.erp_callback_steer, queue_size=1)
 
         if file == 0:
             GLOBAL_NPY = path  #"8jung_test2.npy"
@@ -43,9 +46,14 @@ class Path_Tracking():
 
         self.path_planner = TrajectoryPlanner(glob_path = glob_path)
     
-    def erp_callback(self, data):
-        self.erp_speed = data.read_speed
-        self.erp_steer = data.read_steer
+    def erp_callback_speed(self, data):
+        self.erp_sub_speed = data.read_speed
+                # self.erp_ENC = data.read_ENC
+        # if data.read_gear == 2 and self.erp_speed > 0:
+        #     self.erp_speed *= -1
+
+    def erp_callback_steer(self, data):
+        self.erp_sub_steer = data.read_steer
         # self.erp_ENC = data.read_ENC
         # if data.read_gear == 2 and self.erp_speed > 0:
         #     self.erp_speed *= -1

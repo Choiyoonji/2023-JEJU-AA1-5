@@ -60,8 +60,8 @@ elif WHERE == 3: # jeju track -> traffic available, cw-ccw
                     "Traffic_light_left" : [[1079.5 - 15.0, 1079.5 + 4.0],
                                             [1079.5 - 15.0, 1079.5 + 4.0]]} # 엥 좌회전 한번이네 1043.2
 
-elif WHERE == 4: # jeju track -> traffic none, ccw-cw
-    GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
+elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
+    GLOBAL_PATH_NAME = "jeju_island0.npy" #end is 125.2 start is 0.8 #start is 0.0 end is 26.5
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],

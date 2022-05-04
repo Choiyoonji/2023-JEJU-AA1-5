@@ -68,10 +68,15 @@ class speed_planner():
         self.PID_I = Integral_control(0.1)
 
         self.sub_speed_steer = rospy.Subscriber('speed_planner', erp_write, self.spd_str_callback, queue_size=1)
-        self.erp_sub= rospy.Subscriber('erp_read', erp_read, self.erp_callback, queue_size=1)
+        # self.erp_sub= rospy.Subscriber('erp_read', erp_read, self.erp_callback, queue_size=1)
+        self.erp_sub_speed= rospy.Subscriber('speed_read', erp_read, self.erp_callback_speed, queue_size=1)
+        self.erp_sub_steer= rospy.Subscriber('steer_erp', erp_read, self.erp_callback_steer, queue_size=1)
         self.curvature_sub= rospy.Subscriber('curvature', Float64, self.curvature_callback, queue_size=1)
+
         
-        self.erp_pub = rospy.Publisher("erp_write", erp_write, queue_size=1)
+        # self.erp_pub = rospy.Publisher("erp_write", erp_write, queue_size=1)
+        self.erp_pub_speed = rospy.Publisher("speed_write", erp_write, queue_size=1)
+        self.erp_pub_steer = rospy.Publisher("steer_write", erp_write, queue_size=1)
         self.erp = erp_write()
 
     def spd_str_callback(self, data):
@@ -88,11 +93,18 @@ class speed_planner():
         elif self.steer <= -100:
             self.steer = -100
 
-    def erp_callback(self, data):
-        self.current_speed = data.read_speed
+    def erp_callback_speed(self, data):
+        # self.current_speed = data.read_speed
+        self.erp_sub_speed = data.read_speed
+        self.current_speed = self.erp_sub_speed
         # self.erp_ENC = data.read_ENC
         # if data.read_gear == 2 and self.current_speed > 0:
         #     self.current_speed *= -1
+
+    def erp_callback_steer(self, data):
+        self.erp_sub_steer = data.read_steer
+
+
 
     def curvature_callback(self, value):
         alpha = 0.5 # 직전 값을 얼마나 반영할건지
@@ -113,6 +125,7 @@ class speed_planner():
         elif brake >= 200:
             brake = 200
 
+        
         self.erp.write_speed = speed
         self.erp.write_steer = self.steer
         self.erp.write_brake = brake
