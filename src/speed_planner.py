@@ -13,6 +13,8 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/
 from jeju.msg import erp_read
 from jeju.msg import erp_write
 from std_msgs.msg import Float64
+from std_msgs.msg import Int16, Int32
+from geometry_msgs.msg import Twist
 
 # 곡률에따른 속도제어
 MAX__SPEED = 100
@@ -67,42 +69,44 @@ class speed_planner():
 
         self.PID_I = Integral_control(0.1)
 
-        self.sub_speed_steer = rospy.Subscriber('speed_planner', erp_write, self.spd_str_callback, queue_size=1)
-        # self.erp_sub= rospy.Subscriber('erp_read', erp_read, self.erp_callback, queue_size=1)
-        self.erp_sub_speed= rospy.Subscriber('speed_read', erp_read, self.erp_callback_speed, queue_size=1)
-        self.erp_sub_steer= rospy.Subscriber('steer_erp', erp_read, self.erp_callback_steer, queue_size=1)
-        self.curvature_sub= rospy.Subscriber('curvature', Float64, self.curvature_callback, queue_size=1)
+        self.sub_speed_steer = rospy.Subscriber('speed_planner', Twist, self.spd_str_callback, queue_size=30)
+        self.erp_sub= rospy.Subscriber('erp_read', Twist, self.erp_callback, queue_size=30)
+        # self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
+        # self.erp_sub_steer= rospy.Subscriber('steer_read', Int32, self.erp_callback_steer, queue_size=1)
+        self.curvature_sub= rospy.Subscriber('curvature', Float64, self.curvature_callback, queue_size=30)
 
         
-        # self.erp_pub = rospy.Publisher("erp_write", erp_write, queue_size=1)
-        self.erp_pub_speed = rospy.Publisher("speed_write", erp_write, queue_size=1)
-        self.erp_pub_steer = rospy.Publisher("steer_write", erp_write, queue_size=1)
-        self.erp = erp_write()
+        self.erp_pub = rospy.Publisher('erp_write', Twist, queue_size=10)
+        # self.erp_pub_speed = rospy.Publisher("speed_write", Int16, queue_size=1)
+        # self.erp_pub_steer = rospy.Publisher("steer_write", Int32, queue_size=1)
+        # self.erp_pubb_speed = erp_write().write_speed
+        # self.erp_pubb_steer = erp_write().write_steer
+        self.erp = Twist()
 
     def spd_str_callback(self, data):
-        self.max_speed = data.write_speed
-        self.steer = data.write_steer
+        self.max_speed = data.linear.x
+        self.steer = data.angular.z
 
         if (self.max_speed >= -100) and (self.max_speed <= 100):
             self.target_speed = self.det_target_speed(self.max_speed)
         else:
             self.target_speed = self.max_speed
 
-        if self.steer >= 100:
-            self.steer = 100
-        elif self.steer <= -100:
-            self.steer = -100
+        if self.steer >= 30:
+            self.steer = 30
+        elif self.steer <= -30:
+            self.steer = -30
 
-    def erp_callback_speed(self, data):
-        # self.current_speed = data.read_speed
-        self.erp_sub_speed = data.read_speed
-        self.current_speed = self.erp_sub_speed
+    def erp_callback(self, data):
+        self.current_speed = data.linear.x
+        # self.erp_sub_speed = data
+        # self.current_speed = self.erp_sub_speed
         # self.erp_ENC = data.read_ENC
         # if data.read_gear == 2 and self.current_speed > 0:
         #     self.current_speed *= -1
 
-    def erp_callback_steer(self, data):
-        self.erp_sub_steer = data.read_steer
+    # def erp_callback_steer(self, data):
+    #     self.erp_sub_steer = data
 
 
 
@@ -118,20 +122,27 @@ class speed_planner():
         elif MODE == 2:
             self.max_curvature = self.max_curvature * alpha + (1 - alpha) * value.data
 
-    def pub_serial(self, speed, brake): #gear removed
-        speed, self.steer, brake = int(speed), int(self.steer), int(brake)
-        if brake <= 1:
-            brake = 1
-        elif brake >= 200:
-            brake = 200
+    def pub_serial(self, speed): #gear removed
+        speed, self.steer = speed, self.steer
+        # if brake <= 1:
+        #     brake = 1
+        # elif brake >= 200:
+        #     brake = 200
 
-        
-        self.erp.write_speed = speed
-        self.erp.write_steer = self.steer
-        self.erp.write_brake = brake
+
+
+        self.erp.linear.x = speed
+        self.erp.angular.z = self.steer
+        # self.erp_pubb_speed = speed
+        # self.erp_pubb_steer = self.steer
+        # self.erp.write_brake = brake
         # self.erp.write_gear = gear
 
         self.erp_pub.publish(self.erp)
+        # self.erp_pub_speed.publish(self.erp)
+        # self.erp_pub_steer.publish(self.erp)
+        # self.erp_pub_speed.publish(self.erp_pubb_speed)
+        # self.erp_pub_steer.publish(self.erp_pubb_steer)
 
     def det_target_speed(self, max_spd):
         global MIN__SPEED, MIN___SPEED, STATIC_MIN___SPEED
@@ -149,7 +160,7 @@ class speed_planner():
             elif self.max_curvature >= 0.8:
                 target_speed = MIN__SPEED
             else:
-                target_speed = int(((MIN__SPEED - MAX__SPEED)/(0.8 - 0.3)) * (self.max_curvature - 0.3) + MAX__SPEED)
+                target_speed = float(((MIN__SPEED - MAX__SPEED)/(0.8 - 0.3)) * (self.max_curvature - 0.3) + MAX__SPEED)
         elif MODE == 2:
             if self.max_curvature <= 20 * pi / 180:
                 target_speed = MAX__SPEED
@@ -157,7 +168,7 @@ class speed_planner():
                 #self.max_curvature >= 60 * pi / 180:
                 target_speed = MIN__SPEED
             else:
-                target_speed = int(((MIN__SPEED - MAX__SPEED)/(70*pi/180 - 20*pi/180)) * (self.max_curvature - 20*pi/180) + MAX__SPEED)
+                target_speed = float(((MIN__SPEED - MAX__SPEED)/(70*pi/180 - 20*pi/180)) * (self.max_curvature - 20*pi/180) + MAX__SPEED)
 
         if target_speed >= 100:
             target_speed = 100
@@ -173,7 +184,7 @@ class speed_planner():
         if max_spd > 0 and self.min_time > time.time():
             target_speed = self.min_speed
         else:
-            self.min_speed = 100
+            self.min_speed = 80
 
         if target_speed >= max_speed:
             target_speed = max_speed
@@ -246,9 +257,9 @@ class speed_planner():
             speed = 0
         
         if brake >= 200:
-            brake = 200
+            brake = 0 #200
         elif brake <= 1:
-            brake = 1
+            brake = 0 #1
 
         return speed, brake #gear removed
 
@@ -257,12 +268,13 @@ class speed_planner():
 def main():
     rospy.init_node("speed_planner", anonymous=True)
 
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(1)
 
     sp = speed_planner()
     while not rospy.is_shutdown():
         speed, brake = sp.speed_planner() #gear removed
-        sp.pub_serial(speed, brake)
+        
+        sp.pub_serial(speed)
         
         print("cu, max, target, brake",sp.current_speed, sp.max_speed, sp.target_speed, brake)
         if MODE == 1:

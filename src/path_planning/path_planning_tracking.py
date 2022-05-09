@@ -6,14 +6,16 @@ import rospy
 import os, sys
 import numpy as np
 
+
 # 필요한 Library
 from pure_pursuit_PID import pid_control, pure_pursuit
 from trajectory_planner import TrajectoryPlanner
 from global_path import GlobalPath 
-from std_msgs import Int16, Int32
+# from std_msgs.msg import Int16, Int32
+from geometry_msgs.msg import Twist
 
 # msg 파일
-from jeju.msg import erp_read
+# from jeju.msg import erp_read
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 
@@ -32,8 +34,9 @@ class Path_Tracking():
             self.erp_steer = 0.0
             # self.erp_ENC = 0.0
             # self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
-            self.erp_sub_speed= rospy.Subscriber('speed_read', erp_read, self.erp_callback_speed, queue_size=1)
-            self.erp_sub_steer= rospy.Subscriber('steer_read',erp_read, self.erp_callback_steer, queue_size=1)
+            self.erp_sub= rospy.Subscriber('/erp_read', Twist, self.erp_callback, queue_size=10)
+            # self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
+            # self.erp_sub_steer= rospy.Subscriber('steer_read',Int32, self.erp_callback_steer, queue_size=1)
 
         if file == 0:
             GLOBAL_NPY = path  #"8jung_test2.npy"
@@ -46,20 +49,16 @@ class Path_Tracking():
 
         self.path_planner = TrajectoryPlanner(glob_path = glob_path)
     
-    def erp_callback_speed(self, data):
-        self.erp_sub_speed = data.read_speed
-                # self.erp_ENC = data.read_ENC
-        # if data.read_gear == 2 and self.erp_speed > 0:
-        #     self.erp_speed *= -1
-
-    def erp_callback_steer(self, data):
-        self.erp_sub_steer = data.read_steer
+    def erp_callback(self, data):
+        self.erp_speed = data.linear.x
+        self.erp_steer = data.angular.z
         # self.erp_ENC = data.read_ENC
         # if data.read_gear == 2 and self.erp_speed > 0:
         #     self.erp_speed *= -1
     
     def det_LD(self):
-        ld = int(((self.erp_speed - 100 + 6)/10) + 10) + 3
+        # ld = int(((self.erp_sub_speed - 100 + 6)/10) + 10) + 3
+        ld = 5
         
         if ld >= 23:
             ld = 23
@@ -70,30 +69,31 @@ class Path_Tracking():
 
     def det_Kd(self):
         # 속도 150 에서 Kd 270 이후 속도 10 증가당 Kd 10 감소
-        Kd = (-10 / 10) * (self.erp_speed - 150) + 270
+        # Kd = (-10 / 10) * (self.erp_sub_speed - 150) + 270
+        Kd = 0
 
 
         if self.erp_speed >= 95: #original 180
-            Kd = 50
+            Kd = 0
         elif self.erp_speed >= 85: #original 110
-            Kd = 150
+            Kd = 0
         else:
-            Kd = 400
+            Kd = 0
 
         return Kd
 
     def det_Ki(self):
         # Ki = 100
-        Ki = 50
+        Ki = 0
 
-        Ki = 100
+        Ki = 0
         return Ki
 
     # 함수 사용법 path_len은 경로를 몇m 앞까지 생성할지.
     # ld는 Tracking 할 때 몇 인덱스 앞의 점을 추적할지. 
     # (전역경로 상의 거리가 0.5m 이므로 ld가 7 이면 3.5m 앞의 점을 추적)
 
-    def gps_tracking(self, pose, heading, obs_xy , path_len=4, ld=8, path_num=1): # speed removed
+    def gps_tracking(self, pose, heading, obs_xy=[[0.0, 0.0]] , path_len=4, ld=8, path_num=4): # speed removed
         #self, pose, heading, obs_xy = [[0.0, 0.0]], path_len = 4, ld = 8, path_num = 1
         x, y = pose[0], pose[1]
 
@@ -118,7 +118,7 @@ class Path_Tracking():
             if ld >= 23:
                 ld = 23
             elif ld <= 8:
-                ld = 8
+                ld = 5
 
         # PID 제어 추가        
         if self.path_planner.current_s == 0 :
@@ -137,10 +137,10 @@ class Path_Tracking():
         P_steer = self.PP.get_steer_state(x, y, heading, ld, goal)
         PID_steer = P_steer + Kd * D_steer + Ki * I_steer + 0 # 5는 얼라이먼트 보정값
         
-        if PID_steer >= 100:
-            PID_steer = 100
-        elif PID_steer <= -100:
-            PID_steer = -100
+        if PID_steer >= 200:
+            PID_steer = 40
+        elif PID_steer <= -200:
+            PID_steer = -40
 
         # print(P_steer, Kd * D_steer, Ki * I_steer, PID_steer, 'P, D, I, Total')
         # print(Ki*I_steer, Kd * D_steer, PID_steer, 'i, D, total')

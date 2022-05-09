@@ -17,8 +17,8 @@ Lfc = 2.0  # [m] look-ahead distance
 Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
 WB = 0.73  # [m] wheel base of vehicle #original 1.03
-MAX_STEER = 100
-MIN_STEER = -100
+MAX_STEER = 200
+MIN_STEER = -200
 
 class visual:
     def __init__(self):
@@ -119,33 +119,33 @@ class pid_control:
         return int(Lf)
     '''
 
-def main():
-    #  target course
-    cx,cy = get_manhae_course(1.0)
+# def main():
+#     #  target course
+#     cx,cy = get_manhae_course(1.0)
     
-    target_speed = 10.0 / 3.6  # [m/s]
+#     target_speed = 10.0 / 3.6  # [m/s]
 
-    # initial state
-    state = State(x=cx[0], y=cy[0], yaw=0.0, v=0.0)
+#     # initial state
+#     state = State(x=cx[0], y=cy[0], yaw=0.0, v=0.0)
 
-    lastIndex = len(cx) - 1
-    target_course = TargetCourse(cx, cy)
-    target_ind, LD = target_course.search_target_index(state)
+#     lastIndex = len(cx) - 1
+#     target_course = TargetCourse(cx, cy)
+#     target_ind, LD = target_course.search_target_index(state)
 
-    while lastIndex > target_ind:
+#     while lastIndex > target_ind:
 
-        # Calc control input
-        speed = proportional_control(target_speed, state.v)   #속도
-        steer, target_ind = pure_pursuit_steer_control(       #조향 (rad), 현재ind 
-            state, target_course, target_ind)
+#         # Calc control input
+#         speed = proportional_control(target_speed, state.v)   #속도
+#         steer, target_ind = pure_pursuit_steer_control(       #조향 (rad), 현재ind 
+#             state, target_course, target_ind)
         
-        #print("angle",np.rad2deg(steer))
-        state.update(speed, steer)  # Control vehicle
+#         #print("angle",np.rad2deg(steer))
+#         state.update(speed, steer)  # Control vehicle
 
 
-    # 오류
-    assert lastIndex >= target_ind, "Cannot goal"
+#     # 오류
+#     assert lastIndex >= target_ind, "Cannot goal"
 
-if __name__ == '__main__':
-    print("Pure pursuit path tracking simulation start")
-    main()
+# if __name__ == '__main__':
+#     print("Pure pursuit path tracking simulation start")
+#     main()

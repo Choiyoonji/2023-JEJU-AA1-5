@@ -12,7 +12,8 @@ import numpy as np
 
 # message 파일
 from jeju.msg import erp_write
-from sensor_msgs import PointCloud
+from geometry_msgs.msg import Twist
+# from sensor_msgs import PointCloud
 
 # 모듈 import
 from global_path import GlobalPath
@@ -21,7 +22,9 @@ from mission_cruising import mission_cruising
 # from mission_track import mission_track, path_planning
 
 
-WHERE = 4
+WHERE = 2
+global kkk
+kkk = 122 #where2-> 122 #where3-> 133
 
 CRUISING_SPEED = 60
 
@@ -37,16 +40,16 @@ if WHERE == 1: # 동국대 직선
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
-    mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [362.5, 409.8],
-                    "Dynamic_Obstacle" : [224.6, 305.0], "Cross_Walk" : [9999, 9999],
+    mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [9999, 9999],
+                    "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],
-                    "Traffic_light_straight" : [[110.3 - 15.0, 110.3 + 4.0],
-                                                [248.6 - 15.0, 248.6 + 4.0]], # 110.3, 248.6
+                    "Traffic_light_straight" : [[9999, 9999],
+                                                [9999, 9999]], # 110.3, 248.6
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
 
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
     GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
-    mission_coord = {"Parking" : [0.0, 133.0], "Static_Obstacle" : [286.5, 351.5],
+    mission_coord = {"crusing" : [0.0, 133.0], "Static_Obstacle" : [99999, 99999],
                     "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [827.0, 856.0], "Delivery" : [376.0, 754.3],
                     "Traffic_light_straight" : [[178.2 - 15.0, 178.2 + 4.0],
@@ -98,12 +101,12 @@ def distance(mission_pose, s):
 
 class publish_erp():
     def __init__(self):
-        self.erp_pub = rospy.Publisher("speed_planner", erp_write, queue_size=1)
-        self.erp = erp_write()
+        self.erp_pub = rospy.Publisher("speed_planner", Twist, queue_size=30)
+        self.erp = Twist()
 
     def pub_erp(self, speed, steer):
-        self.erp.write_speed = speed
-        self.erp.write_steer = steer
+        self.erp.linear.x = speed
+        self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
 
 
@@ -124,16 +127,16 @@ class Mission_State():
 
         self.mission_zone = self.mission_zone_trf = 0
 
-        if (distance(mission_coord["Parking"], s)):
-            self.mission_zone = 1
+        if (distance(mission_coord["crusing"], s)):
+            self.mission_zone = 0
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
-            self.mission_zone = 2
+            self.mission_zone = 0
         elif (distance(mission_coord["Static_Obstacle"], s)):
-            self.mission_zone = 3
+            self.mission_zone = 0
         elif (distance(mission_coord["Delivery"], s)):
-            self.mission_zone = 4
+            self.mission_zone = 0
         elif (distance(mission_coord["School_Zone"], s)):
-            self.mission_zone = 5
+            self.mission_zone = 0
         
         for i in mission_coord["Traffic_light_straight"]:
             if (distance(i, s)):
@@ -223,9 +226,10 @@ def main():
 
         # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
         # if 529 < s < 552 or 1108 < s < 1162:
-        if 122 < s:
+        if kkk < s:
             speed = 0
 
+        # rospy.sleep(3)
         pub.pub_erp(speed, steer)
         # print(erp.trffic, 'traffic_info')
         rate.sleep()

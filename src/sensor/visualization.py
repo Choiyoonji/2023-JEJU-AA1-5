@@ -32,7 +32,7 @@ elif WHERE == 5:
 elif WHERE == 6:
     Tracking_path="DP_straight.npy"
 elif WHERE == 7:
-    Tracking_path="test00.npy"
+    Tracking_path="jeju_island0.npy"
 
 #지도의 파일 개수. HD 맵의 차선을 추가하거나하면 수정해야함
 DGU_line=16
@@ -57,7 +57,8 @@ class Visualization():
         if where==1:
             print("draw DGU map")
             for i in range(DGU_line):
-                file_name="DGU_%d.npy"%(i+1)
+                # file_name="DGU_%d.npy"%(i+1)
+                file_name="jeju_island0.npy"
                 self.PATH.append(file_name)
 
         elif where==2:
@@ -205,9 +206,9 @@ class Visualization():
                 action=Marker.ADD,
                 id=i,
                 scale=Vector3(0.1,0.1,0),
-                color=cl)
+                color=(1.0,1.0,1.0,1.0))
 
-            path_arr=np.load(file=PATH_ROOT+"global_map/"+self.PATH[i])
+            path_arr=np.load(file=PATH_ROOT+"path/"+self.PATH[i])
             s=range(len(path_arr))
             for a in s:
                 p=Point()

@@ -20,7 +20,7 @@ import cartesian_frenet_conversion
 BASE_ITER = 30
 
 class GlobalPath: #'/home/macaron/catkin_ws/src/jeju/path/8jung_test2.npy' #  '/home/macaron/catkin_ws/src/jeju/path/npy_file/path/jeju_island1.npy'
-    def __init__(self, filename = '/home/macaron/catkin_ws/src/jeju/path/jeju_island1.npy', x = [], y = []):
+    def __init__(self, filename = '/home/macaron/catkin_ws/src/jeju/path/npy_file/path/jeju_island1.npy', x = [], y = []):
         if len(x) > 0:
             self.rx, self.ry, self.ryaw, self.rk, self.rdk, self.s = cubic_spline_planner.calc_spline_course(x, y)
         else :
