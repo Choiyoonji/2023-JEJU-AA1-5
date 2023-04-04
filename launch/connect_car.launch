@@ -3,10 +3,10 @@
 <launch>
 
 
-    <node name="serial_node" pkg="jeju"  type="serial_node"
+    <node name="serial_node_jeju" pkg="jeju"  type="serial_node_jeju"
     />
 
-    <node name="speed_panner" pkg="jeju"  type="speed_planner.py"
+    <node name="speed_planner" pkg="jeju"  type="speed_planner.py"
     output="screen"/>
 
     

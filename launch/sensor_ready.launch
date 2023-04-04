@@ -8,12 +8,7 @@
     <include file="$(find ydlidar_ros)/launch/X4.launch">
 
     </include>
-    <include file="$(find e2box_imu)/launch/e2box_imu.launch">
-    
-    </include>
     <node name="data_hub" pkg="jeju"  type="data_hub.py"
      />
 
-
-    
 </launch>
