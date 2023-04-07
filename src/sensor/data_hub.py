@@ -11,7 +11,7 @@ from geometry_msgs.msg import Point, Point32, Quaternion
 
 from ublox_msgs.msg import NavPVT
 
-from location import gps_imu_fusion
+from location import only_gps
 from lidar import lidar
 
 class SensorDataHub:
@@ -27,8 +27,9 @@ class SensorDataHub:
         self.obs_pub=rospy.Publisher('object', PointCloud, queue_size=1) # PointCloud.points[i].x 이런식으로 사용
         
         #사용하는 객체 선언
-        self.loc_fusion = gps_imu_fusion()
+        self.loc_fusion = only_gps()
         self.Lidar = lidar()
+        
 
         #flag 선언
         self.lidar_flag = False
@@ -70,9 +71,9 @@ class SensorDataHub:
         return self.gps_flag and self.imu_flag and self.lidar_flag
 
     ##########update 함수 모음############
-    def localization_update(self, select_heading):
+    def localization_update(self):
         x, y = self.loc_fusion.tf_to_tm(self.sub_cood[0], self.sub_cood[1])
-        heading = self.loc_fusion.get_heading(x, y, self.sub_imu, self.sub_gps_heading, select_heading) # 지금은 그냥 gps 헤딩을 그대로 쓰지만, imu가 추가된 해딩을 처리하는 클래스가 필요.
+        heading = self.loc_fusion.get_heading(x, y, self.sub_gps_heading)
         self.pos.x = x #955920.9088
         self.pos.y = y #1950958.212
         self.pos.z = heading
@@ -121,7 +122,7 @@ def main():
 
             start_rate = time.time() # 시작 시간 스템프 찍고
             # 각 정보 업데이트 후 발행
-            Data.localization_update(2)
+            Data.localization_update()
             Data.object_update()
             Data.pub_pose()
             Data.pub_obs()
