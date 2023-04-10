@@ -20,7 +20,7 @@ class SensorDataHub:
         self.laser_sub = rospy.Subscriber('/scan', LaserScan, self.scan_callback, queue_size = 1)
         self.sub_gps = rospy.Subscriber('/ublox_gps/fix', NavSatFix, self.pose_callback, queue_size=1)
         self.sub_heading = rospy.Subscriber('/ublox_gps/navpvt', NavPVT, self.heading_callback, queue_size=1)
-        self.sub_imu = rospy.Subscriber('/imu', Imu, self.imu_callback, queue_size=1) # 마찬가지로 어떤 토픽, 어떤 msg로 오는지 몰라서 일단 주석
+        # self.sub_imu = rospy.Subscriber('/imu', Imu, self.imu_callback, queue_size=1) # 마찬가지로 어떤 토픽, 어떤 msg로 오는지 몰라서 일단 주석
 
         #발행자 선언
         self.localization_pub=rospy.Publisher('current_pose', Point, queue_size=1) # x,y는 tm좌표, z에 들어가 있는 값이 heading
@@ -34,7 +34,7 @@ class SensorDataHub:
         #flag 선언
         self.lidar_flag = False
         self.gps_flag = False
-        self.imu_flag = False
+        # self.imu_flag = False
         
         #Sub 받은 데이터 저장 공간
         self.sub_cood = [0.0, 0.0]
@@ -42,7 +42,7 @@ class SensorDataHub:
         self.sub_scan = []
         for i in range(810):
             self.sub_scan.append(0.0)
-        self.sub_imu = Quaternion()
+        # self.sub_imu = Quaternion()
         
         #obs_pub에 사용되는 msg 객체 선언
         self.pos = Point()
@@ -61,9 +61,9 @@ class SensorDataHub:
         self.sub_scan = scan.ranges
         self.lidar_flag = True
 
-    def imu_callback(self, imu):
-        self.sub_imu = imu.orientation
-        self.imu_flag = True
+    # def imu_callback(self, imu):
+    #     self.sub_imu = imu.orientation
+    #     self.imu_flag = True
     ######################################
 
     # gps, imu, lidar 가 모두 작동해서 데이터가 들어왔는지 확인
