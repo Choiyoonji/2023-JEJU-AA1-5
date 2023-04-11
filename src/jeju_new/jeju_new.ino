@@ -30,6 +30,7 @@ void goForward(int intVelocity);
 void goBackward();
 void turnLeft(int intSteer);
 void turnRight(int intSteer);
+void straight()
 void brake();
 ///////////////////////////////
 
@@ -46,7 +47,24 @@ int currentSteer = 0;
 int currentGear = 0;
 
 void setMode(const jeju::erp_write& msg){
-  int a=0;
+  int gear = msg.write_gear;
+  int speed = msg.write_speed;
+  int steer = msg.write_steer;
+  
+  if(steer > 0){
+    if(steer > MAX_STEER) steer = MAX_STEER;
+    turnLeft(steer);
+  }
+  else if(steer < 0){
+    if(steer < -MAX_STEER) steer = MAX_STEER;
+    turnRight(steer);
+  }
+  else straight();
+
+  if(speed > MAX_SPEED) speed = MAX_SPEED;
+  
+  if(speed == 0) brake();
+  else goForward(speed);
 }
 
 void setCommand(const geometry_msgs::Twist& msg){
@@ -149,17 +167,14 @@ void turnLeft(int intSteer)
   digitalWrite(STEER_BRK, LOW); 
   digitalWrite(STEER_DIR, LOW);
   analogWrite(STEER_PWM, 35);
-  // delay(100);
+  int min_en = -intSteer/4.4-1;
+  if(min_en < -7) min_en = -7;
+  int max_en = min_en+1;
+
   while(1)
-    if(encoder() >= -7 && encoder() <= -6){
-      Serial.println("done");
-      break;
-    }
-      
-    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
-    //   break;
+    if(encoder() >= min_en && encoder() <= max_en) break;
   analogWrite(STEER_PWM, 0);
-  delay(1000); 
+  delay(10); 
 }
 
 void turnRight(int intSteer)
@@ -167,17 +182,15 @@ void turnRight(int intSteer)
   digitalWrite(STEER_BRK, LOW);
   digitalWrite(STEER_DIR, HIGH); 
   analogWrite(STEER_PWM, 35);
+  int max_en = intSteer/4.4+1;
+  if(max_en > 6) max_en = 6;
+  int min_en = max_en - 1;
   while(1){
     int en = encoder(); 
-    if(en >= 5 && en <= 6){
-      Serial.println(en);
-      break;
-    }
+    if(en >= min_en && en <= max_en) break;
   }
-    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
-    //   break;
   analogWrite(STEER_PWM, 0);
-  delay(1000);
+  delay(10); 
 }
 
 void straight()
@@ -188,20 +201,17 @@ void straight()
   while(1){
     int en = encoder(); 
     if(en >= 1 && en <= 0){
-      Serial.println(en);
       break;
     }
   }
-    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
-    //   break;
   analogWrite(STEER_PWM, 0);
-  delay(1000);
+  delay(10);
 }
 
 void brake() 
 {
   digitalWrite(RUN_BRK, HIGH);  
-  delay(1000);
+  delay(10);
 }
 
 int encoder()
