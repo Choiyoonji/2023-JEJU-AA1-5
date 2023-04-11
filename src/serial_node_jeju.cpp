@@ -2,6 +2,7 @@
 #include <serial/serial.h>
 #include <jeju/erp_read.h>
 #include <jeju/erp_write.h>
+#include <geometry_msgs/Twist.h>
 
 #define PI acos(-1)
 #define MAX 18
@@ -35,6 +36,9 @@ void writeCallback(const jeju::erp_write::ConstPtr& write)
     speed1 = write->write_speed;
     // brake = write->write_brake;
 }
+void setCommand(const geometry_msgs::Twist::ConstPtr& msg){
+
+}
 
 int main(int argc, char **argv)
 {
@@ -43,13 +47,14 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     ros::Publisher  serial_pub = nh.advertise<jeju::erp_read>("erp_read", 1);
     ros::Subscriber serial_sub = nh.subscribe("erp_write", 1, writeCallback);
+    ros::Subscriber serialsub = nh.subscribe("cmd_vel", 1, setCommand);
     ros::Rate loop_rate(50);
     jeju::erp_read erp42_state;
     //serial setting
     try
     {
         ser.setPort("/dev/ttyUSB1");
-        ser.setBaudrate(115200);
+        ser.setBaudrate(57600);
         serial::Timeout to = serial::Timeout::simpleTimeout(1000);
         ser.setTimeout(to);
         ser.open();
