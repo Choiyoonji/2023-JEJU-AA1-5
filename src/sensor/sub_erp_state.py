@@ -14,7 +14,7 @@ class sub_erp_state:
         #구독자 선언
         self.pose_sub = rospy.Subscriber('/current_pose', Point, self.pose_callback, queue_size = 10)
         self.obs_sub = rospy.Subscriber('/object', PointCloud, self.obs_callback, queue_size=1)
-        self.erp_sub= rospy.Subscriber('/erp_read', Twist, self.erp_callback, queue_size=10)
+        self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=10)
         # self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
         # self.erp_sub_steer= rospy.Subscriber('steer_read', Int32, self.erp_callback_steer, queue_size=1)
         self.lane_sub = rospy.Subscriber('/lane_dist', Int16MultiArray, self.lane_callback, queue_size=1) # 카메라쪽 정보 받아야 됨
@@ -52,8 +52,8 @@ class sub_erp_state:
             self.obs.append([i.x, i.y])
     
     def erp_callback(self, data):
-        self.erp_speed = data.linear.x
-        self.erp_steer = data.angular.z
+        self.erp_speed = data.read_speed
+        self.erp_steer = data.read_steer
         # self.erp_ENC = data.read_ENC
         # if data.read_gear == 2 and self.erp_speed > 0:
         #     self.erp_speed *= -1
