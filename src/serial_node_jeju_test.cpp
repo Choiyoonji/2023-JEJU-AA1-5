@@ -14,8 +14,6 @@ uint8_t steer1,steer2,speed,speed1,brake,gear;
 uint8_t steer1_save = 0x00;
 uint8_t steer2_save = 0x00;
 uint8_t speed1_save = 0x00;
-// double ENC_saver[4];
-// double vel_saver[4];
 double dt = 0;
 double wheel_base = 1.040, tread = 0.985, width = 1.160;
 int steer = 0;
@@ -33,7 +31,6 @@ void writeCallback(const jeju::erp_write::ConstPtr& write)
     steer2 = (steer%256);
     if(steer<0) steer1=steer1-1;
     speed1 = write->write_speed;
-    // brake = write->write_brake;
 }
 
 int main(int argc, char **argv)
@@ -71,7 +68,7 @@ int main(int argc, char **argv)
     uint8_t a;
     uint8_t PCU_to_UPPER[18] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     //                           S  | T |  X  |A/M|Estop|gear|  speed |  steer  |brake|       ENC        |Alive|ETX0|ETX1 
-    uint8_t UPPER_to_PCU[14] = {0x53,0x54,0x58,0x01,0x00,gear,0x00,speed1_save,steer1_save,steer2_save,brake,a,0x0D,0x0A};
+    uint8_t UPPER_to_PCU[14] = {0x53,0x54,0x58,0x01,0x00,gear,0x00,speed1_save,steer1_save,steer2_save,0x80,a,0x0D,0x0A};
     //                           S  | T  | X  |A/M|Estop|gear|   speed        |        steer          |brake| |ETX0|ETX1 
     uint8_t answer_tester[1]={0x00};
     uint8_t answer_quere[MAX]={0,};
@@ -199,7 +196,7 @@ int main(int argc, char **argv)
         if(inputbool) 
         {
             a++;
-            uint8_t UPPER_to_PCU[14] = {0x53,0x54,0x58,0x01,0x00,gear,0x00,speed1,steer1,steer2,brake,a,0x0D,0x0A};
+            uint8_t UPPER_to_PCU[14] = {0x53,0x54,0x58,0x01,0x00,gear,0x00,speed1,steer1,steer2,0x80,a,0x0D,0x0A};
              //                          S    T    X   A/M Estop gear   speed        steer      brake  ETX0 ETX1 
             ser.write(UPPER_to_PCU,14);
             loop_rate.sleep();

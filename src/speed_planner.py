@@ -70,18 +70,18 @@ class speed_planner():
         self.PID_I = Integral_control(0.1)
 
         self.sub_speed_steer = rospy.Subscriber('speed_planner', Twist, self.spd_str_callback, queue_size=30)
-        self.erp_sub= rospy.Subscriber('erp_read', Twist, self.erp_callback, queue_size=30)
+        self.erp_sub= rospy.Subscriber('erp_read', erp_read, self.erp_callback, queue_size=30)
         # self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
         # self.erp_sub_steer= rospy.Subscriber('steer_read', Int32, self.erp_callback_steer, queue_size=1)
         self.curvature_sub= rospy.Subscriber('curvature', Float64, self.curvature_callback, queue_size=30)
 
         
-        self.erp_pub = rospy.Publisher('erp_write', Twist, queue_size=10)
+        self.erp_pub = rospy.Publisher('erp_write', erp_write, queue_size=10)
         # self.erp_pub_speed = rospy.Publisher("speed_write", Int16, queue_size=1)
         # self.erp_pub_steer = rospy.Publisher("steer_write", Int32, queue_size=1)
         # self.erp_pubb_speed = erp_write().write_speed
         # self.erp_pubb_steer = erp_write().write_steer
-        self.erp = Twist()
+        self.erp = erp_write()
 
     def spd_str_callback(self, data):
         self.max_speed = data.linear.x
@@ -131,8 +131,8 @@ class speed_planner():
 
 
 
-        self.erp.linear.x = speed
-        self.erp.angular.z = self.steer
+        self.erp.write_speed = speed
+        self.erp.write_steer = int(self.steer)
         # self.erp_pubb_speed = speed
         # self.erp_pubb_steer = self.steer
         # self.erp.write_brake = brake
@@ -276,7 +276,7 @@ def main():
         
         sp.pub_serial(speed)
         
-        print("cu, max, target, brake",sp.current_speed, sp.max_speed, sp.target_speed, brake)
+        print("cu, max, target, brake, steer",sp.current_speed, sp.max_speed, sp.target_speed, brake, sp.steer)
         if MODE == 1:
             print(sp.max_curvature)
         elif MODE == 2:
