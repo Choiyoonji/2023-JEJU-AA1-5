@@ -24,13 +24,15 @@ int lastStateCLK;          // 직전 CLK의 신호상태 저장용 변수
 String currentDir ="";      // 현재 회전 방향 출력용 문자열 저장 변수
 unsigned long lastButtonPress = 0;     // 버튼 눌림 상태 확인용 변수
 ////////////////////////////////////
+
 const int velocity = 255 / 3;
 ////////////////////////////////
+
 void goForward(int intVelocity);
 void goBackward();
 void turnLeft(int intSteer);
 void turnRight(int intSteer);
-void straight()
+void straight();
 void brake();
 ///////////////////////////////
 
@@ -143,11 +145,11 @@ void goForward(int intVelocity = velocity)
   currentGear = 1;
   digitalWrite(RUN_BRK, LOW);  
   analogWrite(RUN_PWM, intVelocity);
-  delay(400);
   digitalWrite(RUN_DIR, LOW);   
-  delay(3000);
-  analogWrite(RUN_PWM, intVelocity);
-  delay(400);
+  delay(10);
+  // delay(3000);
+  // analogWrite(RUN_PWM, intVelocity);
+  // delay(400);
 }
 
 void goBackward(int intVelocity = velocity)  
@@ -155,11 +157,8 @@ void goBackward(int intVelocity = velocity)
   currentGear = 2;
   digitalWrite(RUN_BRK, LOW);
   analogWrite(RUN_PWM, intVelocity);
-  delay(400);
   digitalWrite(RUN_DIR, HIGH);   
-  delay(3000);
-  analogWrite(RUN_PWM, intVelocity);
-  delay(400);
+  delay(10);
 }
 
 void turnLeft(int intSteer)
