@@ -46,7 +46,8 @@ int main(int argc, char **argv)
     //ROS setting
     ros::init(argc, argv, "serial_node");
     ros::NodeHandle nh;
-    ros::Publisher  serial_pub = nh.advertise<jeju::erp_read>("erp_read", 1);
+    ros::Publisher  serial_pub = nh.advertise<jeju::erp_read>("erp_read", 10);
+    // ros::Publisher  serial_pub = nh.advertise<geometry_msgs::Twist>("erp_read", 10);
     ros::Subscriber serial_sub = nh.subscribe("erp_write", 1, writeCallback);
     ros::Subscriber serialsub = nh.subscribe("cmd_vel", 1, setCommand);
     ros::Rate loop_rate(50);
@@ -170,8 +171,10 @@ int main(int argc, char **argv)
         }
 
         //throw trash value 
-        if(answer_quere_delayed[0]!=0x53 || answer_quere_delayed[1]!=0x54 || answer_quere_delayed[2]!=0x58 || answer_quere_delayed[16]!=0x0D || answer_quere_delayed[17]!=0x0A)
+        // if(answer_quere_delayed[0]!=0x53 || answer_quere_delayed[1]!=0x54 || answer_quere_delayed[2]!=0x58 || answer_quere_delayed[16]!=0x0D || answer_quere_delayed[17]!=0x0A)
+        if(0)
         {
+            ROS_INFO("DORMAMU??????????");
             ser.flushOutput();
             for(int i=0; i<MAX;i++)
             {
@@ -183,8 +186,6 @@ int main(int argc, char **argv)
                 ROS_INFO("DORMAMU %x",answer_tester[0]);
             }
         }
-
-        //Read to ERP-42!
         else
         {   
             // erp42_state.read_AorM=bool(answer_quere_delayed[3]);
@@ -199,6 +200,7 @@ int main(int argc, char **argv)
             // read steer calibration (-)
             erp42_state.read_steer = -erp42_state.read_steer;
             serial_pub.publish(erp42_state);
+            ROS_INFO("PUUUUUUUUUB");
             ser.flush();
         }
 

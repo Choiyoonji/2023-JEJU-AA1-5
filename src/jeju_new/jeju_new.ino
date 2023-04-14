@@ -3,15 +3,19 @@
 #include <jeju/erp_write.h>
 #include <jeju/erp_read.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int16.h>
+#include <std_msgs/Int32.h>
+
 #include "math.h"
 
 //////////////////////////////
 const int RUN_DIR = 4; // foward or backward
-const int RUN_PWM = 6; // move or stop
+const int RUN_PWM = 3; // move or stop
 const int RUN_BRK = 5; // let motor move
 const int STEER_DIR = 9; // left or right
 const int STEER_PWM = 8; // motor speed
-const int STEER_BRK = 10; // let motor move+
+const int STEER_BRK = 10; // let motor move
 
 #define CLK 3   // 2번핀을 CLK로 지정 otb
 #define DT 2 // 3번핀을 DT로 지정 ota
@@ -24,15 +28,12 @@ int lastStateCLK;          // 직전 CLK의 신호상태 저장용 변수
 String currentDir ="";      // 현재 회전 방향 출력용 문자열 저장 변수
 unsigned long lastButtonPress = 0;     // 버튼 눌림 상태 확인용 변수
 ////////////////////////////////////
-
 const int velocity = 255 / 3;
 ////////////////////////////////
-
 void goForward(int intVelocity);
 void goBackward();
 void turnLeft(int intSteer);
 void turnRight(int intSteer);
-void straight();
 void brake();
 ///////////////////////////////
 
@@ -49,29 +50,7 @@ int currentSteer = 0;
 int currentGear = 0;
 
 void setMode(const jeju::erp_write& msg){
-  int gear = msg.write_gear;
-  int speed = msg.write_speed;
-
-  digitalWrite(22,HIGH);
-  delay(100);
-  digitalWrite(22,LOW);
-
-  int steer = msg.write_steer;
-  
-  if(steer > 0){
-    if(steer > MAX_STEER) steer = MAX_STEER;
-    turnLeft(steer);
-  }
-  else if(steer < 0){
-    if(steer < -MAX_STEER) steer = MAX_STEER;
-    turnRight(steer);
-  }
-  else straight();
-
-  if(speed > MAX_SPEED) speed = MAX_SPEED;
-  
-  if(speed == 0) brake();
-  else goForward(speed);
+  int a=0;
 }
 
 void setCommand(const geometry_msgs::Twist& msg){
@@ -150,11 +129,11 @@ void goForward(int intVelocity = velocity)
   currentGear = 1;
   digitalWrite(RUN_BRK, LOW);  
   analogWrite(RUN_PWM, intVelocity);
+  delay(400);
   digitalWrite(RUN_DIR, LOW);   
-  delay(10);
-  // delay(3000);
-  // analogWrite(RUN_PWM, intVelocity);
-  // delay(400);
+  delay(3000);
+  analogWrite(RUN_PWM, intVelocity);
+  delay(400);
 }
 
 void goBackward(int intVelocity = velocity)  
@@ -162,8 +141,11 @@ void goBackward(int intVelocity = velocity)
   currentGear = 2;
   digitalWrite(RUN_BRK, LOW);
   analogWrite(RUN_PWM, intVelocity);
+  delay(400);
   digitalWrite(RUN_DIR, HIGH);   
-  delay(10);
+  delay(3000);
+  analogWrite(RUN_PWM, intVelocity);
+  delay(400);
 }
 
 void turnLeft(int intSteer)
@@ -171,14 +153,17 @@ void turnLeft(int intSteer)
   digitalWrite(STEER_BRK, LOW); 
   digitalWrite(STEER_DIR, LOW);
   analogWrite(STEER_PWM, 35);
-  int min_en = -intSteer/4.4-1;
-  if(min_en < -7) min_en = -7;
-  int max_en = min_en+1;
-
+  // delay(100);
   while(1)
-    if(encoder() >= min_en && encoder() <= max_en) break;
+    if(encoder() >= -7 && encoder() <= -6){
+      Serial.println("done");
+      break;
+    }
+      
+    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
+    //   break;
   analogWrite(STEER_PWM, 0);
-  delay(10); 
+  delay(1000); 
 }
 
 void turnRight(int intSteer)
@@ -186,15 +171,17 @@ void turnRight(int intSteer)
   digitalWrite(STEER_BRK, LOW);
   digitalWrite(STEER_DIR, HIGH); 
   analogWrite(STEER_PWM, 35);
-  int max_en = intSteer/4.4+1;
-  if(max_en > 6) max_en = 6;
-  int min_en = max_en - 1;
   while(1){
     int en = encoder(); 
-    if(en >= min_en && en <= max_en) break;
+    if(en >= 5 && en <= 6){
+      Serial.println(en);
+      break;
+    }
   }
+    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
+    //   break;
   analogWrite(STEER_PWM, 0);
-  delay(10); 
+  delay(1000);
 }
 
 void straight()
@@ -205,17 +192,20 @@ void straight()
   while(1){
     int en = encoder(); 
     if(en >= 1 && en <= 0){
+      Serial.println(en);
       break;
     }
   }
+    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
+    //   break;
   analogWrite(STEER_PWM, 0);
-  delay(10);
+  delay(1000);
 }
 
 void brake() 
 {
   digitalWrite(RUN_BRK, HIGH);  
-  delay(10);
+  delay(1000);
 }
 
 int encoder()
@@ -251,13 +241,9 @@ int encoder()
 }
 
 void setup() {
-  nh.initNode();
-
   nh.subscribe(getCMD);
   nh.subscribe(erp_write);
   nh.advertise(ErpRead);
-
-  nh.negotiateTopics();
 
   pinMode(RUN_DIR, OUTPUT);
   pinMode(RUN_PWM, OUTPUT);
@@ -268,7 +254,6 @@ void setup() {
   pinMode(CLK,INPUT);
 	pinMode(DT,INPUT);
 
-  pinMode(22,OUTPUT);
 	// CLK핀의 현재 상태 확인
 	lastStateCLK = digitalRead(CLK);	
 }
@@ -284,11 +269,7 @@ void loop() {
   erpRead.read_steer = intSteer;
   erpRead.read_speed = currentSpeed;
 
-
-  
-  
-
-  ErpRead.publish( &erpRead );
+  ErpRead.publish(&erpRead);
   nh.spinOnce();
 
   delay(10);
