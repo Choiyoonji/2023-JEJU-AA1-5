@@ -36,8 +36,9 @@ void writeCallback(const jeju::erp_write::ConstPtr& write)
     speed1 = write->write_speed;
     // brake = write->write_brake;
 }
-void setCommand(const geometry_msgs::Twist::ConstPtr& msg){
 
+void setCommand(const geometry_msgs::Twist::ConstPtr& msg){
+    printf("I got cmd_vel\n");
 }
 
 int main(int argc, char **argv)
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
     //serial setting
     try
     {
-        ser.setPort("/dev/ttyUSB1");
+        ser.setPort("/dev/ttyUSB0");
         ser.setBaudrate(57600);
         serial::Timeout to = serial::Timeout::simpleTimeout(1000);
         ser.setTimeout(to);
@@ -85,8 +86,10 @@ int main(int argc, char **argv)
     last_time = ros::Time::now();
 
     //초기화
+    
     if(ser.available())
     {
+        printf("available!!!!!!!!!!!");
         while(answer_tester[0]!=0x53){
             ser.read(answer_tester,1);
             for(int i=0; i<MAX;i++)
@@ -123,11 +126,10 @@ int main(int argc, char **argv)
         
         ros::spinOnce();
 
-
-
         //읽은 값 프린트
         if(ser.available()){
             ser.read(answer_quere,18);
+            ROS_INFO("MOLA");
 
             //
             if(answer_quere[0]==0x53 && answer_quere[1]==0x54 && answer_quere[2]==0x58 && answer_quere[16]==0x0D && answer_quere[17]==0x0A)
@@ -162,12 +164,12 @@ int main(int argc, char **argv)
 
             for(int i=0; i<MAX;i++)
             {
-                printf("%x ",answer_quere_delayed[i]);
+                printf("%d ",answer_quere_delayed[i]);
             }
             printf("%f \n",dt);
         }
 
-        //throw trash value
+        //throw trash value 
         if(answer_quere_delayed[0]!=0x53 || answer_quere_delayed[1]!=0x54 || answer_quere_delayed[2]!=0x58 || answer_quere_delayed[16]!=0x0D || answer_quere_delayed[17]!=0x0A)
         {
             ser.flushOutput();

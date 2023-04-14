@@ -7,11 +7,11 @@
 
 //////////////////////////////
 const int RUN_DIR = 4; // foward or backward
-const int RUN_PWM = 3; // move or stop
+const int RUN_PWM = 6; // move or stop
 const int RUN_BRK = 5; // let motor move
 const int STEER_DIR = 9; // left or right
 const int STEER_PWM = 8; // motor speed
-const int STEER_BRK = 10; // let motor move
+const int STEER_BRK = 10; // let motor move+
 
 #define CLK 3   // 2번핀을 CLK로 지정 otb
 #define DT 2 // 3번핀을 DT로 지정 ota
@@ -51,6 +51,11 @@ int currentGear = 0;
 void setMode(const jeju::erp_write& msg){
   int gear = msg.write_gear;
   int speed = msg.write_speed;
+
+  digitalWrite(22,HIGH);
+  delay(100);
+  digitalWrite(22,LOW);
+
   int steer = msg.write_steer;
   
   if(steer > 0){
@@ -246,9 +251,13 @@ int encoder()
 }
 
 void setup() {
+  nh.initNode();
+
   nh.subscribe(getCMD);
   nh.subscribe(erp_write);
   nh.advertise(ErpRead);
+
+  nh.negotiateTopics();
 
   pinMode(RUN_DIR, OUTPUT);
   pinMode(RUN_PWM, OUTPUT);
@@ -259,6 +268,7 @@ void setup() {
   pinMode(CLK,INPUT);
 	pinMode(DT,INPUT);
 
+  pinMode(22,OUTPUT);
 	// CLK핀의 현재 상태 확인
 	lastStateCLK = digitalRead(CLK);	
 }
@@ -274,7 +284,11 @@ void loop() {
   erpRead.read_steer = intSteer;
   erpRead.read_speed = currentSpeed;
 
-  ErpRead.publish(&erpRead);
+
+  
+  
+
+  ErpRead.publish( &erpRead );
   nh.spinOnce();
 
   delay(10);

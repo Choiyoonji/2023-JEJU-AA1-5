@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         //읽은 값 프린트
         if(ser.available()){
             ser.read(answer_quere,18);
-
+            ROS_INFO("MOLA");
             //
             if(answer_quere[0]==0x53 && answer_quere[1]==0x54 && answer_quere[2]==0x58 && answer_quere[16]==0x0D && answer_quere[17]==0x0A)
                 for(int i = 0;i < 18; i++)

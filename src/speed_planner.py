@@ -99,6 +99,7 @@ class speed_planner():
 
     def erp_callback(self, data):
         self.current_speed = data.linear.x
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',data.linear.x)
         # self.erp_sub_speed = data
         # self.current_speed = self.erp_sub_speed
         # self.erp_ENC = data.read_ENC
