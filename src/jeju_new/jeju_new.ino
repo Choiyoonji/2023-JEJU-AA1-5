@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ros.h>
-#include <jeju/erp_write.h>
-#include <jeju/erp_read.h>
+// #include <jeju/erp_write.h>
+// #include <jeju/erp_read.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
@@ -10,15 +10,15 @@
 #include "math.h"
 
 //////////////////////////////
-const int RUN_DIR = 4; // foward or backward
-const int RUN_PWM = 3; // move or stop
-const int RUN_BRK = 5; // let motor move
-const int STEER_DIR = 9; // left or right
+const int RUN_PWM = 4; // move or stop
+const int RUN_DIR = 5; // foward or backward
+const int RUN_BRK = 6; // let motor move
 const int STEER_PWM = 8; // motor speed
+const int STEER_DIR = 9; // left or right
 const int STEER_BRK = 10; // let motor move
 
-#define CLK 3   // 2번핀을 CLK로 지정 otb
-#define DT 2 // 3번핀을 DT로 지정 ota
+#define CLK 52   // 3번핀을 CLK로 지정 otb
+#define DT 50 // 2번핀을 DT로 지정 ota
 //////////////////////////////
 
 //////////////////////////////
@@ -39,8 +39,8 @@ void brake();
 
 ros::NodeHandle  nh;
 
-jeju::erp_write erpWrite;
-jeju::erp_read erpRead;
+std_msgs::int16 read_speed;
+std_msgs::int32 read_steer;
 
 const int MAX_SPEED = 81;
 const int MAX_STEER = 22;
@@ -49,8 +49,24 @@ int currentSpeed = 0;
 int currentSteer = 0;
 int currentGear = 0;
 
-void setMode(const jeju::erp_write& msg){
-  int a=0;
+void setMode(const geometry_msgs::Twist& msg){
+  float speed = msg.linear.x;
+  float steer = msg.angular.z;
+
+  if(steer > 0.0){
+    if(steer > MAX_STEER) steer = MAX_STEER;
+    turnLeft(steer);
+  }
+  else if(steer < 0.0){
+    if(steer < -MAX_STEER) steer = MAX_STEER;
+    turnRight(steer);
+  }
+  else straight();
+
+  if(speed > MAX_SPEED) speed = MAX_SPEED;
+  
+  if(speed == 0.0) brake();
+  else goForward(speed);
 }
 
 void setCommand(const geometry_msgs::Twist& msg){
@@ -120,20 +136,21 @@ void setCommand(const geometry_msgs::Twist& msg){
   }
 }
 
-ros::Publisher ErpRead("erp_read",&erpRead);
+ros::Publisher speed_read("speed_read",&read_speed);
+ros::Publisher steer_read("steer_read",&read_steer);
 ros::Subscriber<geometry_msgs::Twist> getCMD("cmd_vel", setCommand);
-ros::Subscriber<jeju::erp_write> erp_write("erp_write", setMode);
+ros::Subscriber<geometry_msgs::Twist> erp_write("erp_write", setMode);
 
 void goForward(int intVelocity = velocity)
 {
   currentGear = 1;
   digitalWrite(RUN_BRK, LOW);  
   analogWrite(RUN_PWM, intVelocity);
-  delay(400);
   digitalWrite(RUN_DIR, LOW);   
-  delay(3000);
-  analogWrite(RUN_PWM, intVelocity);
-  delay(400);
+  delay(10);
+  // delay(3000);
+  // analogWrite(RUN_PWM, intVelocity);
+  // delay(400);
 }
 
 void goBackward(int intVelocity = velocity)  
@@ -141,11 +158,8 @@ void goBackward(int intVelocity = velocity)
   currentGear = 2;
   digitalWrite(RUN_BRK, LOW);
   analogWrite(RUN_PWM, intVelocity);
-  delay(400);
   digitalWrite(RUN_DIR, HIGH);   
-  delay(3000);
-  analogWrite(RUN_PWM, intVelocity);
-  delay(400);
+  delay(10);
 }
 
 void turnLeft(int intSteer)
@@ -153,17 +167,21 @@ void turnLeft(int intSteer)
   digitalWrite(STEER_BRK, LOW); 
   digitalWrite(STEER_DIR, LOW);
   analogWrite(STEER_PWM, 35);
-  // delay(100);
-  while(1)
-    if(encoder() >= -7 && encoder() <= -6){
-      Serial.println("done");
-      break;
-    }
-      
-    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
-    //   break;
+
+  int min_en = -intSteer/4.4-1;
+
+  if(min_en < -7) min_en = -7;
+
+  int max_en = min_en+1;
+
+  while(1){
+    int en = encoder(); 
+    if(en >= min_en && en <= max_en) break;
+  }
+
   analogWrite(STEER_PWM, 0);
-  delay(1000); 
+
+  delay(10); 
 }
 
 void turnRight(int intSteer)
@@ -171,17 +189,21 @@ void turnRight(int intSteer)
   digitalWrite(STEER_BRK, LOW);
   digitalWrite(STEER_DIR, HIGH); 
   analogWrite(STEER_PWM, 35);
+
+  int max_en = intSteer/4.4+1;
+
+  if(max_en > 6) max_en = 6;
+
+  int min_en = max_en - 1;
+
   while(1){
     int en = encoder(); 
-    if(en >= 5 && en <= 6){
-      Serial.println(en);
-      break;
-    }
+    if(en >= min_en && en <= max_en) break;
   }
-    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
-    //   break;
+
   analogWrite(STEER_PWM, 0);
-  delay(1000);
+
+  delay(10); 
 }
 
 void straight()
@@ -192,14 +214,11 @@ void straight()
   while(1){
     int en = encoder(); 
     if(en >= 1 && en <= 0){
-      Serial.println(en);
       break;
     }
   }
-    // if(encoder()*DEFAULT_DEG >= intSteer-5 || encoder()*DEFAULT_DEG <= intSteer+5)
-    //   break;
   analogWrite(STEER_PWM, 0);
-  delay(1000);
+  delay(10);
 }
 
 void brake() 
@@ -241,9 +260,14 @@ int encoder()
 }
 
 void setup() {
+  nh.initNode();
+
   nh.subscribe(getCMD);
   nh.subscribe(erp_write);
-  nh.advertise(ErpRead);
+  nh.advertise(speed_read);
+  nh.advertise(steer_read);
+
+  nh.negotiateTopics();
 
   pinMode(RUN_DIR, OUTPUT);
   pinMode(RUN_PWM, OUTPUT);
@@ -264,12 +288,18 @@ int intSteer = 0;
 void loop() {
   intSteer = encoder()*4.4;
 
-  erpRead.read_E_stop = 0;
-  erpRead.read_gear = currentGear;
-  erpRead.read_steer = intSteer;
-  erpRead.read_speed = currentSpeed;
+  // erpRead.read_E_stop = 0;
+  // erpRead.read_gear = currentGear;
+  // erpRead.read_steer = intSteer;
+  // erpRead.read_speed = currentSpeed;
 
-  ErpRead.publish(&erpRead);
+  read_speed.data = currentSpeed;
+  read_steer.data = intSteer;
+
+  speed_read.publish(&read_speed);
+  steer_read.publish(&read_steer);
+  // ErpRead.publish(&erpRead);
+
   nh.spinOnce();
 
   delay(10);
