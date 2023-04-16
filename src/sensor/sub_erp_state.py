@@ -2,11 +2,11 @@
 # -- coding: utf-8 --
 import rospy
 
-from jeju.msg import erp_read, Traffic
+from jeju.msg import Traffic
 from std_msgs.msg import Int16MultiArray
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point
-# from std_msgs.msg import Int16, Int32
+from std_msgs.msg import Int16, Int32
 from geometry_msgs.msg import Twist
 
 class sub_erp_state:
@@ -14,9 +14,9 @@ class sub_erp_state:
         #구독자 선언
         self.pose_sub = rospy.Subscriber('/current_pose', Point, self.pose_callback, queue_size = 10)
         self.obs_sub = rospy.Subscriber('/object', PointCloud, self.obs_callback, queue_size=1)
-        self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=10)
-        # self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
-        # self.erp_sub_steer= rospy.Subscriber('steer_read', Int32, self.erp_callback_steer, queue_size=1)
+        # self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=10)
+        self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
+        self.erp_sub_steer= rospy.Subscriber('steer_read', Int32, self.erp_callback_steer, queue_size=1)
         self.lane_sub = rospy.Subscriber('/lane_dist', Int16MultiArray, self.lane_callback, queue_size=1) # 카메라쪽 정보 받아야 됨
         self.obj_sub = rospy.Subscriber('/traffic_obj', Traffic, self.obj_callback, queue_size=1)
 
@@ -51,24 +51,24 @@ class sub_erp_state:
         for i in data.points:
             self.obs.append([i.x, i.y])
     
-    def erp_callback(self, data):
-        self.erp_speed = data.read_speed
-        self.erp_steer = data.read_steer
+    # def erp_callback(self, data):
+    #     self.erp_speed = data.read_speed
+    #     self.erp_steer = data.read_steer
         # self.erp_ENC = data.read_ENC
         # if data.read_gear == 2 and self.erp_speed > 0:
         #     self.erp_speed *= -1
 
-    # def erp_callback_speed(self, data):
-    #     # self.current_speed = data.read_speed
-    #     self.erp_sub_speed = data
-    #     self.erp_speed = self.erp_sub_speed
-    #             # self.erp_ENC = data.read_ENC
-    #     # if data.read_gear == 2 and self.current_speed > 0:
-    #     #     self.current_speed *= -1
+    def erp_callback_speed(self, data):
+        # self.current_speed = data.read_speed
+        self.erp_sub_speed = data
+        self.erp_speed = self.erp_sub_speed
+                # self.erp_ENC = data.read_ENC
+        # if data.read_gear == 2 and self.current_speed > 0:
+        #     self.current_speed *= -1
 
-    # def erp_callback_steer(self, data):
-    #     self.erp_sub_steer = data
-    #     self.erp_steer = self.erp_sub_steer
+    def erp_callback_steer(self, data):
+        self.erp_sub_steer = data
+        self.erp_steer = self.erp_sub_steer
 
     def lane_callback(self, data):
         self.lane_dis = data.data

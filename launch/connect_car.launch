@@ -3,8 +3,10 @@
 <launch>
 
 
-    <node name="serial_node_jeju" pkg="jeju"  type="serial_node_jeju"
-    />
+    <node name="serial_node_jeju" pkg="rosserial_python"  type="serial_node.py">
+        <param name="_port" value="/dev/ttyACM0"/>
+        <param name="_baud" value="57600"/>
+    </node>
 
     <node name="speed_planner" pkg="jeju"  type="speed_planner.py"
     output="screen"/>
