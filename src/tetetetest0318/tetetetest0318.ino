@@ -9,9 +9,9 @@
 const int RUN_DIR = 4; // foward or backward
 const int RUN_PWM = 3; // move or stop
 const int RUN_BRK = 5; // let motor move
-const int STEER_DIR = 10; // left or right
-const int STEER_PWM = 9; // motor speed
-const int STEER_BRK = 11; // let motor move
+const int STEER_DIR = 9; // left or right
+const int STEER_PWM = 8; // motor speed
+const int STEER_BRK = 10; // let motor move
 const int DEFAULT_DEG = 18; // steer 각도 세팅
 
 #define CLK 3   // 2번핀을 CLK로 지정 otb
@@ -182,9 +182,9 @@ void setup()
 
 void loop() {
   // put your main code here, to run repeatedly:
-  turnLeft(50);
   // turnLeft(50);
-  // turnRight(50);
+  // turnLeft(50);
+  turnRight(50);
   // turnLeft(50);
   // delay(1000);
   // brake();

@@ -9,6 +9,8 @@
 
 #include "math.h"
 
+#define PI 3.141592
+
 //////////////////////////////
 const int RUN_PWM = 4; // move or stop
 const int RUN_DIR = 5; // foward or backward
@@ -28,19 +30,20 @@ int lastStateCLK;          // 직전 CLK의 신호상태 저장용 변수
 String currentDir ="";      // 현재 회전 방향 출력용 문자열 저장 변수
 unsigned long lastButtonPress = 0;     // 버튼 눌림 상태 확인용 변수
 ////////////////////////////////////
-const int velocity = 255 / 3;
+const int velocity = 120;
 ////////////////////////////////
 void goForward(int intVelocity);
-void goBackward();
+void goBackward(int intVelocity);
 void turnLeft(int intSteer);
 void turnRight(int intSteer);
-void brake();
+void brake(bool k);
+int encoder();
 ///////////////////////////////
 
 ros::NodeHandle  nh;
 
-std_msgs::int16 read_speed;
-std_msgs::int32 read_steer;
+std_msgs::Int16 read_speed;
+std_msgs::Int32 read_steer;
 
 const int MAX_SPEED = 81;
 const int MAX_STEER = 22;
@@ -51,89 +54,141 @@ int currentGear = 0;
 
 void setMode(const geometry_msgs::Twist& msg){
   float speed = msg.linear.x;
-  float steer = msg.angular.z;
+  float steer = msg.angular.z*180/PI;
+  int en = encoder()*4.4;
 
-  if(steer > 0.0){
-    if(steer > MAX_STEER) steer = MAX_STEER;
-    turnLeft(steer);
+  digitalWrite(RUN_BRK, LOW);
+
+  if(steer > MAX_STEER) steer = MAX_STEER;
+  else if(steer < -MAX_STEER) steer = -MAX_STEER;
+
+  if(en < 0){
+    if(en > steer) turnRight(steer);
+    else turnLeft(steer);
   }
-  else if(steer < 0.0){
-    if(steer < -MAX_STEER) steer = MAX_STEER;
-    turnRight(steer);
+  else{
+    if(en > steer) turnRight(steer);
+    else turnLeft(steer);
   }
-  else straight();
 
   if(speed > MAX_SPEED) speed = MAX_SPEED;
+  else if(speed < -MAX_SPEED) speed = -MAX_SPEED;
   
-  if(speed == 0.0) brake();
-  else goForward(speed);
+  if(speed == 0.0) brake(1);
+  else if(speed > 0) goForward(speed);
+  else goBackward(-speed);
 }
 
 void setCommand(const geometry_msgs::Twist& msg){
   float a = msg.angular.z;
-  int angle = abs(20*msg.angular.z);
+  int angle = abs(8*msg.angular.z);
   float v = msg.linear.x;
-  int vel = abs(30*msg.linear.x);
+  int vel = 20*msg.linear.x;
 
-  static int velocity = 0;
-  static int anglular = 0;
+  static int velocity_F = 0;
+  static int velocity_B = 0;
+  // static int anglular = 0;
   
-  anglular += angle;
+  // anglular += angle;
  
-  // int currentAngle = analogRead(
+  int currentAngle = encoder()*4.4;
 
   digitalWrite(RUN_BRK, LOW);
+
+  if (v == 0.5){
+    velocity_B = 0;
+    velocity_F += vel;
+    if (velocity_F > MAX_SPEED) velocity_F = MAX_SPEED;
+    goForward(velocity_F);
+  }
+  else if (v == 0){
+    if (velocity_F + velocity_B) brake(1);
+    else brake(0);
+    velocity_F = 0;
+    velocity_B = 0;
+  }
+  else if (v == -0.5){
+    velocity_F = 0;
+    velocity_B += vel;
+    if (velocity_B > MAX_SPEED) velocity_B = MAX_SPEED;
+    goBackward(velocity_B);
+  }
+
+  if (a == -1){
+    int angular = currentAngle + angle;
+    if (angular > MAX_STEER) angular = MAX_STEER;
+    turnRight(angular);
+  }
+  else if (a == 1){
+    int angular = currentAngle - angle;
+    if (angular < -MAX_STEER) angular = -MAX_STEER;
+    turnLeft(angular);
+  }
+  else {
+    if (currentAngle < 0) turnRight(0);
+    else turnLeft(0);
+  }
+
+
   
-  if (a == 0 && v == 0.5)
-  {
-    velocity += vel;
+  // if (a == 0 && v == 0.5)
+  // {
+  //   velocity_F += vel;
    
-    if (velocity < MAX_SPEED) 
-    {
-      goForward(velocity);
-    }
-    else
-    {
-      velocity = MAX_SPEED;
-    }
-  }
-  else if (a == -1 && v == 0.5) // Right
-  {
-    // goForward(velocity);
-    anglular += angle;
-    currentSteer += angle;
+  //   if (velocity_F < MAX_SPEED) 
+  //   {
+  //     goForward(velocity_F);
+  //   }
+  //   else
+  //   {
+  //     velocity_F = MAX_SPEED;
+  //   }
+  // }
+  // else if (a == -1 && v == 0.5) // Right
+  // {
+  //   // goForward(velocity);
+  //   anglular += angle;
+  //   currentSteer += angle;
     
-    if (anglular < MAX_STEER) 
-    {
-      turnRight(angle);
-    }
-    else
-    {
-      anglular = MAX_STEER;
-      currentSteer = MAX_STEER;
-    }
-  }
-  else if (a == 1 && v== 0.5) // Left
-  {
-    // goForward(velocity);
-    anglular -= angle;
-    currentSteer -= angle;
+  //   if (anglular < MAX_STEER) 
+  //   {
+  //     turnRight(angle);
+  //   }
+  //   else
+  //   {
+  //     anglular = MAX_STEER;
+  //     currentSteer = MAX_STEER;
+  //   }
+  // }
+  // else if (a == 1 && v== 0.5) // Left
+  // {
+  //   // goForward(velocity);
+  //   anglular -= angle;
+  //   currentSteer -= angle;
     
-    if (anglular > -MAX_STEER) 
-    {
-      turnLeft(angle);
-    }
-    else
-    {
-      anglular = -MAX_STEER;
-      currentSteer = -MAX_STEER;
-    }
-  }
-  else if (a == 0 && v == 0)
-  {
-    brake();
-    velocity = 0;
-  }
+  //   if (anglular > -MAX_STEER) 
+  //   {
+  //     turnLeft(-angle);
+  //   }
+  //   else
+  //   {
+  //     anglular = -MAX_STEER;
+  //     currentSteer = -MAX_STEER;
+  //   }
+  // }
+  // else if (a == 0 && v == 0)
+  // {
+  //   brake();
+  //   velocity_B = 0;
+  //   velocity_F = 0;
+  // }
+  // else if (v < 0){
+  //   brake();
+  //   velocity_F = 0;
+  //   velocity_B += vel;
+  //   if (velocity_B < -MAX_SPEED)
+  //   goBackward()
+  // }
 }
 
 ros::Publisher speed_read("speed_read",&read_speed);
@@ -166,9 +221,9 @@ void turnLeft(int intSteer)
 {
   digitalWrite(STEER_BRK, LOW); 
   digitalWrite(STEER_DIR, LOW);
-  analogWrite(STEER_PWM, 35);
+  analogWrite(STEER_PWM, 60);
 
-  int min_en = -intSteer/4.4-1;
+  int min_en = intSteer/4.4-1;
 
   if(min_en < -7) min_en = -7;
 
@@ -176,9 +231,11 @@ void turnLeft(int intSteer)
 
   while(1){
     int en = encoder(); 
+
     if(en >= min_en && en <= max_en) break;
   }
 
+  digitalWrite(STEER_BRK, HIGH);
   analogWrite(STEER_PWM, 0);
 
   delay(10); 
@@ -188,7 +245,7 @@ void turnRight(int intSteer)
 {
   digitalWrite(STEER_BRK, LOW);
   digitalWrite(STEER_DIR, HIGH); 
-  analogWrite(STEER_PWM, 35);
+  analogWrite(STEER_PWM, 60);
 
   int max_en = intSteer/4.4+1;
 
@@ -201,6 +258,7 @@ void turnRight(int intSteer)
     if(en >= min_en && en <= max_en) break;
   }
 
+  digitalWrite(STEER_BRK, HIGH);
   analogWrite(STEER_PWM, 0);
 
   delay(10); 
@@ -221,10 +279,11 @@ void straight()
   delay(10);
 }
 
-void brake() 
+void brake(bool k = 1) 
 {
-  digitalWrite(RUN_BRK, HIGH);  
-  delay(1000);
+  if (k) digitalWrite(RUN_BRK, HIGH); 
+  analogWrite(RUN_PWM, 0);
+  delay(100);
 }
 
 int encoder()
