@@ -6,12 +6,13 @@ from jeju.msg import Traffic
 from std_msgs.msg import Int16MultiArray
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point
-from std_msgs.msg import Int16, Int32
+from std_msgs.msg import Int16, Int32, String
 from geometry_msgs.msg import Twist
 
 class sub_erp_state:
     def __init__(self):
         #구독자 선언
+        self.state_sub = rospy.Subscriber('/read_state', String, self.state_callback, queue_size=50)
         self.pose_sub = rospy.Subscriber('/current_pose', Point, self.pose_callback, queue_size = 10)
         self.obs_sub = rospy.Subscriber('/object', PointCloud, self.obs_callback, queue_size=1)
         # self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=10)
@@ -29,6 +30,7 @@ class sub_erp_state:
         self.erp_steer = 0.0
         self.erp_ENC = 0.0
         self.lane_dis = [0.0, 0.0]
+        self.state = "state: "
 
         self.trffic = [0, 0, 0, 0] # [빨, 노, 좌, 초]
         self.traffic_y = 416
@@ -42,6 +44,9 @@ class sub_erp_state:
 
     ##########callback 함수 모음##########
     # 각 센서에서 데이터가 들어오면 객체 내부의 데이터 저장공간에 저장
+    def state_callback(self, data):
+        self.state = data
+        
     def pose_callback(self, data):
         self.pose = [data.x, data.y]
         self.heading = data.z

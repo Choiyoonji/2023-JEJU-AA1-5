@@ -109,11 +109,6 @@ class publish_erp():
         self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
 
-
-# class track_erp:
-#     def __init__(self):
-#         self.obs_sub = rospy.Subscriber('/object',PointCloud, self.obs_callback,queue_size=1)
-
 class Mission_State():
     def __init__(self):
         self.mission_state = 0
@@ -206,6 +201,7 @@ def main():
     while not rospy.is_shutdown():
         s, q = GB.xy2sl(erp.pose[0], erp.pose[1])
         print(s), 'current s'
+        print(erp.state)
         state = MS.mission_update(s)
 
         if (MS.mission_state == 0): # 크루징(디폴트) 모드 (장애물 회피 X)

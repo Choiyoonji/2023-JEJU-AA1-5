@@ -43,29 +43,6 @@ class lidar:
 
         return f_arr  
 
-# class vis:
-#     def __init__(self):
-#         self.obs_pub=rospy.Publisher('/obs', Marker, queue_size = 1)
-
-#     def vis_obs(self, obs):
-#         obs_list = obs.tolist()
-#         i = 0
-
-#         for a in obs_list:
-#             rviz_msg_scan=Marker(
-#                 header=Header(frame_id='map',stamp=rospy.get_rostime()),
-#                 ns="lidar",
-#                 id = i,
-#                 type=Marker.SPHERE,
-#                 lifetime=rospy.Duration(),
-#                 action=Marker.ADD,
-#                 scale=Vector3(x=0.02,y=0.02,z=0.02),
-#                 color=ColorRGBA(r=0.0,g=1.0,b=0.0,a=1.0),
-#                 pose=Pose(position=Point(x = float(a[0]), y = float(a[1]), z = float(a[2])))
-#                 )
-#             i += 1
-#             self.obs_pub.publish(rviz_msg_scan)
-
 def main():
     rate = rospy.Rate(0.1)
     Lidar = lidar()
