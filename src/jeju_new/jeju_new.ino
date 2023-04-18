@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include <ros.h>
-// #include <jeju/erp_write.h>
-// #include <jeju/erp_read.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
@@ -29,14 +27,15 @@ int currentStateCLK;       // CLK의 현재 신호상태 저장용 변수
 int lastStateCLK;          // 직전 CLK의 신호상태 저장용 변수 
 String currentDir ="";      // 현재 회전 방향 출력용 문자열 저장 변수
 unsigned long lastButtonPress = 0;     // 버튼 눌림 상태 확인용 변수
+bool E_STOP = 0;
 ////////////////////////////////////
-const int velocity = 120;
+const int velocity = 81;
 ////////////////////////////////
 void goForward(int intVelocity);
 void goBackward(int intVelocity);
 void turnLeft(int intSteer);
 void turnRight(int intSteer);
-void brake(bool k);
+void brake(bool k); 
 int encoder();
 ///////////////////////////////
 
@@ -53,30 +52,36 @@ int currentSteer = 0;
 int currentGear = 0;
 
 void setMode(const geometry_msgs::Twist& msg){
-  float speed = msg.linear.x;
-  float steer = msg.angular.z*180/PI;
-  int en = encoder()*4.4;
+  if(!E_STOP){
+    float speed = msg.linear.x;
+    float steer = msg.angular.z*180/PI;
+    int en = encoder()*4.4;
 
-  digitalWrite(RUN_BRK, LOW);
+    digitalWrite(RUN_BRK, LOW);
 
-  if(steer > MAX_STEER) steer = MAX_STEER;
-  else if(steer < -MAX_STEER) steer = -MAX_STEER;
+    if(steer > MAX_STEER) steer = MAX_STEER;
+    else if(steer < -MAX_STEER) steer = -MAX_STEER;
 
-  if(en < 0){
-    if(en > steer) turnRight(steer);
-    else turnLeft(steer);
+    if(en < 0){
+      if(en > steer) turnRight(steer);
+      else turnLeft(steer);
+    }
+    else{
+      if(en > steer) turnRight(steer);
+      else turnLeft(steer);
+    }
+
+    if(speed > MAX_SPEED) speed = MAX_SPEED;
+    else if(speed < -MAX_SPEED) speed = -MAX_SPEED;
+
+    if(speed == 0.0) brake(1);
+    else if(speed > 0) goForward(speed);
+    else goBackward(30);
   }
   else{
-    if(en > steer) turnRight(steer);
-    else turnLeft(steer);
+    brake(0);
+    encoder();
   }
-
-  if(speed > MAX_SPEED) speed = MAX_SPEED;
-  else if(speed < -MAX_SPEED) speed = -MAX_SPEED;
-  
-  if(speed == 0.0) brake(1);
-  else if(speed > 0) goForward(speed);
-  else goBackward(-speed);
 }
 
 void setCommand(const geometry_msgs::Twist& msg){
@@ -87,13 +92,22 @@ void setCommand(const geometry_msgs::Twist& msg){
 
   static int velocity_F = 0;
   static int velocity_B = 0;
-  // static int anglular = 0;
-  
-  // anglular += angle;
  
   int currentAngle = encoder()*4.4;
 
   digitalWrite(RUN_BRK, LOW);
+
+  if (v > 10 && a > 10){
+    E_STOP = 1;
+    if (velocity_F + velocity_B) brake(1);
+    else brake(0);
+    velocity_F = 0;
+    velocity_B = 0;
+  }
+
+  if (v < 10 && a < 10){
+    E_STOP = 0;
+  }
 
   if (v == 0.5){
     velocity_B = 0;
@@ -109,8 +123,7 @@ void setCommand(const geometry_msgs::Twist& msg){
   }
   else if (v == -0.5){
     velocity_F = 0;
-    velocity_B += vel;
-    if (velocity_B > MAX_SPEED) velocity_B = MAX_SPEED;
+    velocity_B = 30;
     goBackward(velocity_B);
   }
 
@@ -128,67 +141,6 @@ void setCommand(const geometry_msgs::Twist& msg){
     if (currentAngle < 0) turnRight(0);
     else turnLeft(0);
   }
-
-
-  
-  // if (a == 0 && v == 0.5)
-  // {
-  //   velocity_F += vel;
-   
-  //   if (velocity_F < MAX_SPEED) 
-  //   {
-  //     goForward(velocity_F);
-  //   }
-  //   else
-  //   {
-  //     velocity_F = MAX_SPEED;
-  //   }
-  // }
-  // else if (a == -1 && v == 0.5) // Right
-  // {
-  //   // goForward(velocity);
-  //   anglular += angle;
-  //   currentSteer += angle;
-    
-  //   if (anglular < MAX_STEER) 
-  //   {
-  //     turnRight(angle);
-  //   }
-  //   else
-  //   {
-  //     anglular = MAX_STEER;
-  //     currentSteer = MAX_STEER;
-  //   }
-  // }
-  // else if (a == 1 && v== 0.5) // Left
-  // {
-  //   // goForward(velocity);
-  //   anglular -= angle;
-  //   currentSteer -= angle;
-    
-  //   if (anglular > -MAX_STEER) 
-  //   {
-  //     turnLeft(-angle);
-  //   }
-  //   else
-  //   {
-  //     anglular = -MAX_STEER;
-  //     currentSteer = -MAX_STEER;
-  //   }
-  // }
-  // else if (a == 0 && v == 0)
-  // {
-  //   brake();
-  //   velocity_B = 0;
-  //   velocity_F = 0;
-  // }
-  // else if (v < 0){
-  //   brake();
-  //   velocity_F = 0;
-  //   velocity_B += vel;
-  //   if (velocity_B < -MAX_SPEED)
-  //   goBackward()
-  // }
 }
 
 ros::Publisher speed_read("speed_read",&read_speed);
@@ -198,11 +150,12 @@ ros::Subscriber<geometry_msgs::Twist> erp_write("erp_write", setMode);
 
 void goForward(int intVelocity = velocity)
 {
+  currentSpeed = intVelocity;
   currentGear = 1;
   digitalWrite(RUN_BRK, LOW);  
   analogWrite(RUN_PWM, intVelocity);
   digitalWrite(RUN_DIR, LOW);   
-  delay(10);
+  delay(5);
   // delay(3000);
   // analogWrite(RUN_PWM, intVelocity);
   // delay(400);
@@ -210,11 +163,12 @@ void goForward(int intVelocity = velocity)
 
 void goBackward(int intVelocity = velocity)  
 {
+  currentSpeed = intVelocity;
   currentGear = 2;
   digitalWrite(RUN_BRK, LOW);
   analogWrite(RUN_PWM, intVelocity);
   digitalWrite(RUN_DIR, HIGH);   
-  delay(10);
+  delay(5);
 }
 
 void turnLeft(int intSteer)
@@ -223,11 +177,11 @@ void turnLeft(int intSteer)
   digitalWrite(STEER_DIR, LOW);
   analogWrite(STEER_PWM, 60);
 
-  int min_en = intSteer/4.4-1;
+  int min_en = intSteer/4.4 - 1;
 
   if(min_en < -7) min_en = -7;
 
-  int max_en = min_en+1;
+  int max_en = min_en + 1;
 
   while(1){
     int en = encoder(); 
@@ -238,12 +192,13 @@ void turnLeft(int intSteer)
   digitalWrite(STEER_BRK, HIGH);
   analogWrite(STEER_PWM, 0);
 
-  delay(10); 
+  delay(5); 
 }
 
 void turnRight(int intSteer)
 {
-  digitalWrite(STEER_BRK, LOW);
+  digitalWrite(STEER_BRK,
+  } LOW);
   digitalWrite(STEER_DIR, HIGH); 
   analogWrite(STEER_PWM, 60);
 
@@ -261,29 +216,15 @@ void turnRight(int intSteer)
   digitalWrite(STEER_BRK, HIGH);
   analogWrite(STEER_PWM, 0);
 
-  delay(10); 
+  delay(5); 
 }
 
-void straight()
+void brake(bool k = 1) // k가 1이면 brake 핀으로 정지, 0이면 pwm 핀으로 정지
 {
-  digitalWrite(STEER_BRK, LOW);
-  digitalWrite(STEER_DIR, HIGH); 
-  analogWrite(STEER_PWM, 35);
-  while(1){
-    int en = encoder(); 
-    if(en >= 1 && en <= 0){
-      break;
-    }
-  }
-  analogWrite(STEER_PWM, 0);
-  delay(10);
-}
-
-void brake(bool k = 1) 
-{
+  currentSpeed = 0;
   if (k) digitalWrite(RUN_BRK, HIGH); 
   analogWrite(RUN_PWM, 0);
-  delay(100);
+  delay(30);
 }
 
 int encoder()
@@ -304,10 +245,10 @@ int encoder()
 			currentDir ="좌회전";
 		}
       
-		Serial.print("회전방향: ");             
-		Serial.print(currentDir);           //회전방향 출력
-		Serial.print(" | Counter: ");
-		Serial.println(counter);           // 회전 카운팅 출력
+		// Serial.print("회전방향: ");             
+		// Serial.print(currentDir);           //회전방향 출력
+		// Serial.print(" | Counter: ");
+		// Serial.println(counter);           // 회전 카운팅 출력
 	}
 
 	// 현재의 CLK상태를 저장
@@ -322,6 +263,7 @@ void setup() {
   nh.initNode();
 
   nh.subscribe(getCMD);
+  pinMode(STEER_BRK, OUTPUT);
   nh.subscribe(erp_write);
   nh.advertise(speed_read);
   nh.advertise(steer_read);
@@ -358,7 +300,7 @@ void loop() {
   speed_read.publish(&read_speed);
   steer_read.publish(&read_steer);
   // ErpRead.publish(&erpRead);
-
+  
   nh.spinOnce();
 
   delay(10);

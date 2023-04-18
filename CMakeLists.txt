@@ -50,8 +50,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
   add_message_files(
     FILES
-    erp_read.msg
-    erp_write.msg
+    # erp_read.msg
+    # erp_write.msg
     Traffic.msg
     obj_info.msg
  )
@@ -158,11 +158,11 @@ file(GLOB SOURCES
 # )
 
 
-add_executable(serial_node_jeju src/serial_node_jeju.cpp)
-add_dependencies(serial_node_jeju ${${serial_node_jeju}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(serial_node_jeju
-  ${catkin_LIBRARIES}
-)
+# add_executable(serial_node_jeju src/serial_node_jeju.cpp)
+# add_dependencies(serial_node_jeju ${${serial_node_jeju}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(serial_node_jeju
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##

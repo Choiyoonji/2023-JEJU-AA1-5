@@ -101,7 +101,7 @@ def distance(mission_pose, s):
 
 class publish_erp():
     def __init__(self):
-        self.erp_pub = rospy.Publisher("speed_planner", Twist, queue_size=30)
+        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=30)
         self.erp = Twist()
 
     def pub_erp(self, speed, steer):
