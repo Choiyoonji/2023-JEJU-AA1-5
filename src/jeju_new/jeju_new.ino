@@ -197,8 +197,7 @@ void turnLeft(int intSteer)
 
 void turnRight(int intSteer)
 {
-  digitalWrite(STEER_BRK,
-  } LOW);
+  digitalWrite(STEER_BRK, LOW);
   digitalWrite(STEER_DIR, HIGH); 
   analogWrite(STEER_PWM, 60);
 
