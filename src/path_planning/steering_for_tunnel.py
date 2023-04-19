@@ -3,6 +3,8 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import LaserScan
 
+Version = 2
+
 
 class SteeringInTunnel:
     def __init__(self):
@@ -31,4 +33,34 @@ class SteeringInTunnel:
         r_avg, l_avg = sum(r_data) / len(self.sub_scan), sum(l_data) / len(self.sub_scan)  # 20° 범위의 값들의 평균
         steer2 = ((l_avg - r_avg) / (self.tunnel_width - self.width)) * 22  # normalization 후 22를 곱하여 steer 값으로 변환
 
-        return self.w1 * steer1 + self.w2 * steer2
+        if Version == 1:
+            return self.w1 * steer1 + self.w2 * steer2
+        elif Version == 2:
+            return max(min(steer1 + steer2, 22), -22)
+        else:
+            pass
+    '''
+    Version 1 : 두 steer 의 평균을 반환
+    Version 2 : steer1 과 steer2 를 단순 합산
+    
+    Case 1 ①가장 먼 지점이 정면 기준 좌측 10°이고 ②현재 차의 위치가 터널 '중앙' 에 놓여 있을 때
+        steer1 = 10, steer2 = 0
+            ▷ Version 1   =>   return = 5
+            ▷ Version 2   =>   return = 10 
+    
+    Case 2 ①가장 먼 지점이 정면 기준 좌측 10°이고 ②현재 차의 위치가 터널 '왼쪽' 에 붙어 있을 때
+        steer1 = 10, steer2 = -22
+            ▷ Version 1   =>   return = -6      
+            ▷ Version 2   =>   return = -12
+            
+    Case 3 ①가장 먼 지점이 정면 기준 좌측 10°이고 ②현재 차의 위치가 터널 '오른쪽' 에 붙어 있을 때
+        steer1 = 10, steer2 = 22
+            ▷ Version 1   =>   return = 16      
+            ▷ Version 2   =>   return = 22
+            
+    Version 1 은 두 값을 평균 내기 때문에 최대 steer 인 22 or -22 에 도달 하는 경우가 극히 드물다.
+    따라서 두 steer 를 더해 빠르게 반응할 수 있는 Version 2 를 생각해 보았다.
+    
+    급격한 코너가 있는 터널의 경우는 Version 2가, 완만한 곡률의 터널인 경우는 Version 1 이 더 성능이 좋을 것이라 생각 한다.
+    둘 다 안좋을 수도...?
+    '''
