@@ -9,6 +9,8 @@ import rospy
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from std_msgs.msg import Int64
+import time
 
 from geometry_msgs.msg import Point
 # Parameters
@@ -16,9 +18,11 @@ k = 0.15  # look forward gain
 Lfc = 2.0  # [m] look-ahead distance
 Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
-WB = 0.73  # [m] wheel base of vehicle #original 1.03
-MAX_STEER = 200
-MIN_STEER = -200
+WB = 1.03  # [m] wheel base of vehicle
+MAX_STEER = 2000
+MIN_STEER = -2000
+
+goal_point_half_dist_index = 100 #100개의 인덱스 10m의 경로를 생성할 수 있도록
 
 class visual:
     def __init__(self):
@@ -40,7 +44,9 @@ class State:
     def update(self,x,y,yaw):                         
         self.x = x
         self.y = y
-        self.yaw = yaw  
+        self.yaw = yaw
+        print("yaw: ")
+        print(yaw)  
 
 def proportional_control(target, current):     # 급발진 방지
     a = Kp * (target - current)
@@ -67,10 +73,17 @@ class pure_pursuit:
         self.target_speed = 10.0 / 3.6  # [m/s]
         self.state = State()
         self.ind = 0
+        self.path_generator_pub = rospy.Publisher('/generated_path', Int64, queue_size= 1)
+        self.path_generated_interval = 3
+        self.path_generate_time = 0
 
     # 함수를 사용할 때 velocity 위치에 ld를 넣는데 이유가 뭐지..?
     def get_steer_state(self, x, y, heading, ind, goal):
         self.state.update(x,y, heading)
+
+        if(((goal[0][0]-x)**2 + (goal[1][0]-y)**2 >= 3**2) and time.time() - self.path_generate_time > self.path_generated_interval) :
+            self.path_generate_time = time.time()
+            self.path_generator_pub.publish(goal_point_half_dist_index)
 
         try:
             g_dis = np.hypot(x-goal[0][ind],y-goal[1][ind])
@@ -78,7 +91,7 @@ class pure_pursuit:
             g_dis = np.hypot(x-goal[0][-1],y-goal[1][-1])
         steer = pure_pursuit_steer_control(self.state, goal, ind, g_dis)
         
-        target_steer = np.rad2deg(steer) * 110
+        target_steer = np.rad2deg(steer) * 71
         if target_steer > MAX_STEER:
             target_steer = MAX_STEER
         if target_steer < MIN_STEER:
@@ -91,11 +104,13 @@ class pid_control:
         self.last_q = 0
         self.I_value = 0
         self.time = time
+        
     def D_control(self, q):
         D_value = (q - self.last_q) / self.time
                
         self.last_q = q
         return D_value
+    
     def I_control(self, q):
         if self.I_value * q <= 0 or abs(q) <= 0.3:
             self.I_value = 0
@@ -119,33 +134,33 @@ class pid_control:
         return int(Lf)
     '''
 
-# def main():
-#     #  target course
-#     cx,cy = get_manhae_course(1.0)
+def main():
+    #  target course
+    cx,cy = get_manhae_course(1.0)
     
-#     target_speed = 10.0 / 3.6  # [m/s]
+    target_speed = 10.0 / 3.6  # [m/s]
 
-#     # initial state
-#     state = State(x=cx[0], y=cy[0], yaw=0.0, v=0.0)
+    # initial state
+    state = State(x=cx[0], y=cy[0], yaw=0.0, v=0.0)
 
-#     lastIndex = len(cx) - 1
-#     target_course = TargetCourse(cx, cy)
-#     target_ind, LD = target_course.search_target_index(state)
+    lastIndex = len(cx) - 1
+    target_course = TargetCourse(cx, cy)
+    target_ind, LD = target_course.search_target_index(state)
 
-#     while lastIndex > target_ind:
+    while lastIndex > target_ind:
 
-#         # Calc control input
-#         speed = proportional_control(target_speed, state.v)   #속도
-#         steer, target_ind = pure_pursuit_steer_control(       #조향 (rad), 현재ind 
-#             state, target_course, target_ind)
+        # Calc control input
+        speed = proportional_control(target_speed, state.v)   #속도
+        steer, target_ind = pure_pursuit_steer_control(       #조향 (rad), 현재ind 
+            state, target_course, target_ind)
         
-#         #print("angle",np.rad2deg(steer))
-#         state.update(speed, steer)  # Control vehicle
+        #print("angle",np.rad2deg(steer))
+        state.update(speed, steer)  # Control vehicle
 
 
-#     # 오류
-#     assert lastIndex >= target_ind, "Cannot goal"
+    # 오류
+    assert lastIndex >= target_ind, "Cannot goal"
 
-# if __name__ == '__main__':
-#     print("Pure pursuit path tracking simulation start")
-#     main()
+if __name__ == '__main__':
+    print("Pure pursuit path tracking simulation start")
+    main()
