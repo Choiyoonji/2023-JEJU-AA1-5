@@ -11,7 +11,6 @@ import math
 import numpy as np
 
 # message 파일
-from jeju.msg import erp_write
 from geometry_msgs.msg import Twist
 # from sensor_msgs import PointCloud
 
@@ -21,7 +20,6 @@ from sub_erp_state import sub_erp_state
 from mission_cruising import mission_cruising
 # from mission_track import mission_track, path_planning
 
-
 WHERE = 2
 global kkk
 kkk = 122 #where2-> 122 #where3-> 133
@@ -30,8 +28,8 @@ CRUISING_SPEED = 60
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "dgtest8.npy" 
-    mission_coord = {"Parking" : [999999, 999999999], "Static_Obstacle" : [5,30],
+    GLOBAL_PATH_NAME = "won_c_0419.npy" 
+    mission_coord = {"Parking" : [999999, 999999999], "Static_Obstacle" : [9995,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [9999, 9999], "Delivery" : [999, 999],
                     "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],
@@ -199,9 +197,10 @@ def main():
     rospy.sleep(1)
 
     while not rospy.is_shutdown():
+        print('====================================')
         s, q = GB.xy2sl(erp.pose[0], erp.pose[1])
         print(s), 'current s'
-        print(erp.state)
+        print(erp.states)
         state = MS.mission_update(s)
 
         if (MS.mission_state == 0): # 크루징(디폴트) 모드 (장애물 회피 X)

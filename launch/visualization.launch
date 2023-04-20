@@ -4,7 +4,7 @@
 
 
     <node name="rviz" pkg="rviz" type="rviz" 
-    args="-d $(find jeju)/riz_test.rviz" />
+    args="-d $(find jeju)/rviz/macaron5.rviz" />
 
     <node name="visualization" pkg="jeju"  type="visualization.py"
     output="screen"/>

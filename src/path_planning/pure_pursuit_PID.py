@@ -19,10 +19,8 @@ Lfc = 2.0  # [m] look-ahead distance
 Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
 WB = 1.03  # [m] wheel base of vehicle
-MAX_STEER = 2000
-MIN_STEER = -2000
-
-goal_point_half_dist_index = 100 #100개의 인덱스 10m의 경로를 생성할 수 있도록
+MAX_STEER = 22
+MIN_STEER = -22
 
 class visual:
     def __init__(self):
@@ -73,25 +71,17 @@ class pure_pursuit:
         self.target_speed = 10.0 / 3.6  # [m/s]
         self.state = State()
         self.ind = 0
-        self.path_generator_pub = rospy.Publisher('/generated_path', Int64, queue_size= 1)
-        self.path_generated_interval = 3
-        self.path_generate_time = 0
 
     # 함수를 사용할 때 velocity 위치에 ld를 넣는데 이유가 뭐지..?
     def get_steer_state(self, x, y, heading, ind, goal):
         self.state.update(x,y, heading)
-
-        if(((goal[0][0]-x)**2 + (goal[1][0]-y)**2 >= 3**2) and time.time() - self.path_generate_time > self.path_generated_interval) :
-            self.path_generate_time = time.time()
-            self.path_generator_pub.publish(goal_point_half_dist_index)
-
         try:
             g_dis = np.hypot(x-goal[0][ind],y-goal[1][ind])
         except:
             g_dis = np.hypot(x-goal[0][-1],y-goal[1][-1])
         steer = pure_pursuit_steer_control(self.state, goal, ind, g_dis)
         
-        target_steer = np.rad2deg(steer) * 71
+        target_steer = np.rad2deg(steer)
         if target_steer > MAX_STEER:
             target_steer = MAX_STEER
         if target_steer < MIN_STEER:

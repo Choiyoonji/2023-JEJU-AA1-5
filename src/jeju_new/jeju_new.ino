@@ -9,9 +9,9 @@
 #include "math.h"
 #include <string.h>
 
-#define E "E-stop"
-#define M "Manual"
-#define A "Auto"
+#define E "E-stop "
+#define M "Manual "
+#define A "Auto "
 
 //////////////////////////////
 const int RUN_PWM = 4; // move or stop
@@ -105,7 +105,7 @@ void setCommand(const geometry_msgs::Twist& msg){
 
   digitalWrite(RUN_BRK, LOW);
 
-  if (v > 10 && a > 10){
+  if (v > 10 && a > 10 && v < 100 && a < 100){
     E_STOP = 1;
     if (velocity_F + velocity_B) brake(1);
     else brake(0);
@@ -142,7 +142,7 @@ void setCommand(const geometry_msgs::Twist& msg){
     }
     else if (v == -0.5){
       velocity_F = 0;
-      velocity_B = 30;
+      velocity_B = 50;
       goBackward(velocity_B);
     }
 
@@ -318,7 +318,7 @@ void loop() {
   // erpRead.read_steer = intSteer;
   // erpRead.read_speed = currentSpeed;
   
-  char state[100] = "state: ";
+  char state[20] = "state: ";
   
   if (E_STOP) strcat(state, E);
   if (MANUAL) strcat(state, M);

@@ -10,12 +10,18 @@ class Frenet_path:
     
     def __init__(self):
         self.s = []
+        self.splus = []
         self.q = []
+        self.qplus = []
 
         self.x = []
+        self.xplus = []
         self.y = []
+        self.yplus = []
         self.yaw = []
+        self.yawplus = []
         self.k = []
+        self.kplus = []
         
         self.offset_cost = 0
         self.obs_distance = 0

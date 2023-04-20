@@ -12,7 +12,7 @@ from geometry_msgs.msg import Twist
 class sub_erp_state:
     def __init__(self):
         #구독자 선언
-        self.state_sub = rospy.Subscriber('/read_state', String, self.state_callback, queue_size=50)
+        self.state_sub = rospy.Subscriber('/state_read', String, self.state_callback, queue_size=100)
         self.pose_sub = rospy.Subscriber('/current_pose', Point, self.pose_callback, queue_size = 10)
         self.obs_sub = rospy.Subscriber('/object', PointCloud, self.obs_callback, queue_size=1)
         # self.erp_sub= rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=10)
@@ -30,7 +30,7 @@ class sub_erp_state:
         self.erp_steer = 0.0
         self.erp_ENC = 0.0
         self.lane_dis = [0.0, 0.0]
-        self.state = "state: "
+        self.states = " "
 
         self.trffic = [0, 0, 0, 0] # [빨, 노, 좌, 초]
         self.traffic_y = 416
@@ -45,7 +45,7 @@ class sub_erp_state:
     ##########callback 함수 모음##########
     # 각 센서에서 데이터가 들어오면 객체 내부의 데이터 저장공간에 저장
     def state_callback(self, data):
-        self.state = data
+        self.states = data.data
         
     def pose_callback(self, data):
         self.pose = [data.x, data.y]
@@ -55,26 +55,13 @@ class sub_erp_state:
         self.obs = []
         for i in data.points:
             self.obs.append([i.x, i.y])
-    
-    # def erp_callback(self, data):
-    #     self.erp_speed = data.read_speed
-    #     self.erp_steer = data.read_steer
-        # self.erp_ENC = data.read_ENC
-        # if data.read_gear == 2 and self.erp_speed > 0:
-        #     self.erp_speed *= -1
 
     def erp_callback_speed(self, data):
-        # self.current_speed = data.read_speed
-        self.erp_sub_speed = data
-        self.erp_speed = self.erp_sub_speed
-                # self.erp_ENC = data.read_ENC
-        # if data.read_gear == 2 and self.current_speed > 0:
-        #     self.current_speed *= -1
+        self.erp_speed = data.data
 
     def erp_callback_steer(self, data):
-        self.erp_sub_steer = data
-        self.erp_steer = self.erp_sub_steer
-
+        self.erp_steer = data.data
+        
     def lane_callback(self, data):
         self.lane_dis = data.data
         

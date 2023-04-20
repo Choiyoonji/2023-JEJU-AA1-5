@@ -58,8 +58,8 @@ class TrajectoryPlanner: # path planner
         # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "snu_small_obstacle_yellow.npy")) 
         # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "mh_stop_green.npy")) 
         # self.center.extend(np.load(file=PATH_ROOT+"path/" + "wonline10203.npy")) 
-        self.center.extend(np.load(file=PATH_ROOT+"path/" + "mhlline_0324.npy")) 
-        self.center.extend(np.load(file=PATH_ROOT+"path/" + "mhrline_0324.npy")) 
+        # self.center.extend(np.load(file=PATH_ROOT+"path/" + "mhlline_0324.npy")) 
+        # self.center.extend(np.load(file=PATH_ROOT+"path/" + "mhrline_0324.npy")) 
 
         # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "snu_bus_line.npy"))
         # self.center.extend(np.load(file=PATH_ROOT+"obstacle/" + "PG_solidline.npy")) #대운동장
