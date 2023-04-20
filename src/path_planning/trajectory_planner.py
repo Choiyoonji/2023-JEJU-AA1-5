@@ -157,7 +157,8 @@ class TrajectoryPlanner: # path planner
         sf_final = 0 # 최종 s값 중간 경로만 길게 뻗기 위해서 만듦
         sf = si + ds + self.S_MARGIN # 종료상태 s
         sf_side = sf-1.0
-        
+        print('-----s ',si)
+        print('-----q ',qi)
         #if path_num == 5:
         #    path_num = 3
 
@@ -453,6 +454,7 @@ class TrajectoryPlanner: # path planner
             if self.visual == True:
                 self.visual_selected(safe_candidate_paths[0])
                 self.max_curvature_pub(safe_candidate_paths[0], collision_count, path_len, heading)
+            print('trajec: ',safe_candidate_paths[0].x)
             return safe_candidate_paths[0]
 
         selected_path = self.__select_optimal_trajectory(safe_candidate_paths, obs_xy,MACARON_TREAD)
@@ -489,7 +491,6 @@ class TrajectoryPlanner: # path planner
         ryaw = self.glob_path.get_current_reference_yaw()
         dtheta = heading - ryaw
         safe_candidate_paths = self.generate_path(si, qi, dtheta, path_len, 0, 1)
-
         if path_num == 1:
             if self.visual == True:
                 self.visual_selected(safe_candidate_paths[0])

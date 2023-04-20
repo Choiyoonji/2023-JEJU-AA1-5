@@ -44,7 +44,7 @@ Tracking_path=[]
 if WHERE == 1:
     Tracking_path="PG.npy" #대운동장 전체 경로
 elif WHERE == 2:
-    Tracking_path="won_c_0419.npy"
+    Tracking_path="mh_gp_0420.npy"
 elif WHERE == 3:
     Tracking_path="bonseon.npy"
 elif WHERE == 4:

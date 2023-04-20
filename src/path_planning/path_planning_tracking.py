@@ -5,7 +5,6 @@
 import rospy
 import os, sys
 import numpy as np
-import re
 #import matplotlib.pyplot as plt #pid 제어값 튜닝을 위해 사용 
 
 # 필요한 Library
@@ -34,7 +33,7 @@ class Path_Tracking():
             self.erp_ENC = 0.0
             self.erp_sub_speed= rospy.Subscriber('speed_read', Int16, self.erp_callback_speed, queue_size=1)
             self.erp_sub_steer= rospy.Subscriber('steer_read', Int32, self.erp_callback_steer, queue_size=1)
-        
+
         if file == 0:
             GLOBAL_NPY = path  #"8jung_test2.npy"
             PATH_ROOT=(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/path/"
@@ -42,7 +41,6 @@ class Path_Tracking():
             glob_path = GlobalPath(gp_name)
         else:
             glob_path = GlobalPath(x = path[0], y = path[1])
-
 
         self.path_planner = TrajectoryPlanner(glob_path = glob_path)
     
@@ -63,20 +61,21 @@ class Path_Tracking():
         return ld
 
     def det_Kd(self):
-        # 속도 30 에서 Kd 60 이후 속도 1 증가당 Kd 1 감소
-        # Kd = (-1 / 1) * (self.erp_speed - 30) + 60
+        # 속도 150 에서 Kd 270 이후 속도 10 증가당 Kd 10 감소
+        # Kd = (-10 / 10) * (self.erp_speed - 150) + 270
 
-        if self.erp_speed >= 40:
-            Kd = 10
-        elif self.erp_speed >= 20:
-            Kd = 15
+
+        if self.erp_speed >= 50:
+            Kd = 0.5
+        elif self.erp_speed >= 30:
+            Kd = 1.5
         else:
-            Kd = 40
+            Kd = 4
 
         return Kd
 
     def det_Ki(self):
-        Ki = 100
+        Ki = 1
         return Ki
 
     # 함수 사용법 path_len은 경로를 몇m 앞까지 생성할지.
@@ -87,10 +86,12 @@ class Path_Tracking():
         # 경로 생성 및 선택   
         selected_path = self.path_planner.optimal_trajectory(x, y, heading, obs_xy, path_num = path_num, path_len = path_len, MACARON_TREAD=1.5)#예선 : 1.5, 본선 : 3.0
 
+        # print("&&&&&&&&&&&&&&&&&&pose: ",pose)
         #speed, steer, goal 
         goal = [selected_path.x, selected_path.y]
-        print('=======goal: ', goal)
 
+        # print('========== goal: ', goal)
+        
         # 가변 LD 적용 및 ld값이 기본 크루징 일때
         if Variable_LD == True and ld == 8 and path_len == 4:
             ld = self.det_LD()
@@ -113,7 +114,7 @@ class Path_Tracking():
             else:
                 I_steer = self.PID.I_control(self.path_planner.current_q)
 
-        Kp = 20.0
+        Kp = 1.0
         Kd = self.det_Kd()
         Ki = self.det_Ki()
 ###########################################################
@@ -122,7 +123,7 @@ class Path_Tracking():
 ###########################################################
 
         P_steer = self.PP.get_steer_state(x, y, heading, ld, goal)
-        PID_steer = Kp*P_steer + Kd * D_steer + Ki * I_steer
+        PID_steer = Kp*P_steer + Kd * D_steer + Ki * I_steer + 0 # 5는 얼라이먼트 보정값
 
         
         if PID_steer >= 22:
@@ -130,7 +131,7 @@ class Path_Tracking():
         elif PID_steer <= -22:
             PID_steer = -22
 
-        print('*********steer: ',PID_steer)
+        print('***********P_steer',P_steer)
         return PID_steer
 
 
@@ -159,7 +160,7 @@ class Path_Tracking():
             else:
                 D_steer = 0
                 I_steer = 0
-        Kp = 20
+        Kp = 1.5
         Kd = self.det_Kd()
         Ki = self.det_Ki()
 

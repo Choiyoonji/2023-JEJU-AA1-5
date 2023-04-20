@@ -20,7 +20,7 @@ from sub_erp_state import sub_erp_state
 from mission_cruising import mission_cruising
 # from mission_track import mission_track, path_planning
 
-WHERE = 2
+WHERE = 1
 global kkk
 kkk = 122 #where2-> 122 #where3-> 133
 
@@ -28,8 +28,8 @@ CRUISING_SPEED = 60
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "won_c_0419.npy" 
-    mission_coord = {"Parking" : [999999, 999999999], "Static_Obstacle" : [9995,9930],
+    GLOBAL_PATH_NAME = "mh_gp_0420.npy" 
+    mission_coord = {"crusing" : [0.0, 1299995.0], "Static_Obstacle" : [9995,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
                     "School_Zone" : [9999, 9999], "Delivery" : [999, 999],
                     "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],

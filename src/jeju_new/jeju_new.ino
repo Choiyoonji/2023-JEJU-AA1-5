@@ -61,7 +61,7 @@ int currentGear = 0;
 void setMode(const geometry_msgs::Twist& msg){
   if(!E_STOP&&AUTO){
     float speed = msg.linear.x;
-    float steer = msg.angular.z*180/PI;
+    float steer = msg.angular.z;
     int en = encoder()*4.4;
 
     digitalWrite(RUN_BRK, LOW);
@@ -69,15 +69,8 @@ void setMode(const geometry_msgs::Twist& msg){
     if(steer > MAX_STEER) steer = MAX_STEER;
     else if(steer < -MAX_STEER) steer = -MAX_STEER;
 
-    if(en < 0){
-     
-      if(en > steer) turnRight(steer);
-      else turnLeft(steer);
-    }
-    else{
-      if(en > steer) turnRight(steer);
-      else turnLeft(steer);
-    }
+    if(en < steer) turnRight(steer);
+    else turnLeft(steer);
 
     if(speed > MAX_SPEED) speed = MAX_SPEED;
     else if(speed < -MAX_SPEED) speed = -MAX_SPEED;
