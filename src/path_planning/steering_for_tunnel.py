@@ -25,7 +25,7 @@ class SteeringInTunnel:
 
     def get_steer(self):    # scan_data 의 데이터 타입 확인 후 0.0의 데이터 타입 수정 필요
         self.sub_scan[self.sub_scan == 0.0] = self.max_dis  # 최대 측정 거리를 넘어가 값이 0.0 으로 들어올 때 max_dis 로 변환
-        longest_angle = np.argmax(self.sub_scan[75:195 + 1:5])  # 좌우 60° 중 거리가 가장 먼 angle 탐색
+        longest_angle = np.argmax(self.sub_scan[75:195 + 1])  # 좌우 60° 중 거리가 가장 먼 angle 탐색
         steer1 = max(min(longest_angle - 60, 22), -22)  # 가장 먼 angle 을 정면 기준 으로 바꿔 steer 값으로 변환
                                                         # -22°를 넘으면 -22°로, 22°를 넘으면 22°
 
