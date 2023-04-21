@@ -55,7 +55,6 @@ class SensorDataHub:
     
     def scan_callback(self, scan):
         self.sub_scan = scan.ranges
-        print("jimin",len(scan.ranges))
         self.lidar_flag = True
     ######################################
 
@@ -72,9 +71,7 @@ class SensorDataHub:
         self.pos.z = heading
 
     def object_update(self):
-        self.obs = PointCloud()
-        print("scan: ",len(self.sub_scan))
-        self.Lidar.tf_tm_yd(self.sub_scan, self.pos.x , self.pos.y, self.pos.z) # 들어온 점을 tm좌표로 변환
+        self.Lidar.tf_tm(self.sub_scan, self.pos.x, self.pos.y, self.pos.z) # 들어온 점을 tm좌표로 변환
         obs_clean = self.Lidar.clean() #격자화
         # obs_clean = [[955920.0, 1950958.0],[955921.0, 1950958.0],[955919.0, 1950958.0],[955921.0, 1950959.0],[955922.0, 1950960.0],[955918.0, 1950958.0],[955920.0, 1950960.0]]
         
