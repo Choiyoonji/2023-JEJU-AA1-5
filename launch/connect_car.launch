@@ -2,11 +2,9 @@
 
 <launch>
 
-
-    <node name="serial_node_jeju" pkg="rosserial_python"  type="serial_node.py">
-        <param name="_port" value="/dev/ttyACM0"/>
+    <node name="serial_node_jeju" pkg="rosserial_python"  type="serial_node.py" output="screen">
+        <param name="_port" value="/dev/ttyACM1"/>
         <param name="_baud" value="57600"/>
     </node>
 
-    
 </launch>
