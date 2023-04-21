@@ -20,8 +20,8 @@ class SteeringInTunnel:
 
     def get_steer(self):
         self.sub_scan[self.sub_scan == 'inf'] = self.max_dis  # 최대 측정 거리를 넘어가 값이 'inf' 로 들어올 때 max_dis 로 변환
-        r_data, l_data = self.sub_scan[55:75 + 1:3], self.sub_scan[195:215 + 1:3]  # 좌우 50° ~ 80° 범위 거리 데이터
-        r_avg, l_avg = sum(r_data) / len(r_data), sum(l_data) / len(l_data)  # 20° 범위의 값들의 평균
+        r_data, l_data = self.sub_scan[55:75 + 1:3], self.sub_scan[195:215 + 1:3]  # 정면 기준 좌우 50° ~ 80° 범위 거리 데이터
+        r_avg, l_avg = sum(r_data) / len(r_data), sum(l_data) / len(l_data)  # 50° ~ 80° 범위의 거리 값들의 평균
         steer = ((r_avg - l_avg) / (self.tunnel_width - self.width)) * 22 * 1.1  # normalization 후 steer 로 변환, 1.1은 가중치
         return max(min(steer, 22), -22)
 
