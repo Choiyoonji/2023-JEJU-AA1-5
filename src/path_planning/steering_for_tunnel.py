@@ -86,7 +86,6 @@ def main():
         speed = 30
         steer = Tunnel.get_steer()
         pub.pub_erp(speed, steer)
-        rate.sleep()
 
 if __name__ == '__main__':
     main()
