@@ -193,7 +193,7 @@ def main():
     Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
 
 
-    print("제주도 녹차맛 마카롱")
+    print("제주도 한라봉맛 마카롱")
     rospy.sleep(1)
 
     while not rospy.is_shutdown():
@@ -204,13 +204,13 @@ def main():
         state = MS.mission_update(s)
 
         if (MS.mission_state == 0): # 크루징(디폴트) 모드 (장애물 회피 X)
-            print("크루징---")
+            print("떼굴떼굴---")
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = CRUISING_SPEED
             
 
         elif (MS.mission_state == 1): # 정적장애물 모드
-            print("피해")
+            print("라봉아 피해!")
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
             speed = CRUISING_SPEED
         
