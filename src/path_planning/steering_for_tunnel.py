@@ -2,9 +2,9 @@
 import rospy
 import numpy as np
 from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
 
 Version = 2
-
 
 class SteeringInTunnel:
     def __init__(self):
@@ -64,3 +64,29 @@ class SteeringInTunnel:
     급격한 코너가 있는 터널의 경우는 Version 2가, 완만한 곡률의 터널인 경우는 Version 1 이 더 성능이 좋을 것이라 생각 한다.
     둘 다 안좋을 수도...?
     '''
+    
+class publish_erp():
+    def __init__(self):
+        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=30)
+        self.erp = Twist()
+
+    def pub_erp(self, speed, steer):
+        self.erp.linear.x = speed
+        self.erp.angular.z = steer
+        self.erp_pub.publish(self.erp)
+    
+def main():
+    #기본 설정
+    rospy.init_node('tunnel_node', anonymous=True)
+
+    Tunnel = SteeringInTunnel() # 객체 생성
+    pub = publish_erp()
+
+    while not rospy.is_shutdown():
+        speed = 30
+        steer = Tunnel.get_steer()
+        pub.pub_erp(speed, steer)
+        rate.sleep()
+
+if __name__ == '__main__':
+    main()
