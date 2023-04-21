@@ -8,8 +8,5 @@
         <param name="_baud" value="57600"/>
     </node>
 
-    <node name="speed_planner" pkg="jeju"  type="speed_planner.py"
-    output="screen"/>
-
     
 </launch>

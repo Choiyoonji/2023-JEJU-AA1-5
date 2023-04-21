@@ -2,7 +2,7 @@
 
 <launch>
 
-    <include file="$(find ublox_gps)/launch/ublox_zed-f9p.launch">
+    <include file="$(find sick_tim)/launch/sick_tim571_2050101.launch">
 
     </include>
     <include file="$(find ydlidar_ros_driver)/launch/X4.launch">
