@@ -15,13 +15,15 @@ class SteeringInTunnel:
         self.width = 0.77  # 차 폭 [m]
         # self.length = 1.35  # 차 길이 [m]
         self.tunnel_width = 1.5  # 터널 폭 [m]
-        self.max_dis = 10.0  # lidar 센서 최대 측정 범위 [m]
+        self.max_dis = 15.0  # lidar 센서 최대 측정 범위 [m]
 
         self.w1 = 0.5
         self.w2 = 0.5
 
     def scan_callback(self, scan):
-        self.sub_scan = scan.ranges[0:810:3]     # ranges 하면 모든 값들 다 받아 오는 건가? 그리고 값 들의 해상도 는 얼마나 되지??
+        scan = np.array(scan.ranges[0:810:3])     # ranges 하면 모든 값들 다 받아 오는 건가? 그리고 값 들의 해상도 는 얼마나 되지??
+        scan[scan >= self.max_dis or scan == 0.0] = self.max_dis
+        self.sub_scan = scan.tolist()
 
     def get_steer(self):    # scan_data 의 데이터 타입 확인 후 0.0의 데이터 타입 수정 필요
         self.sub_scan[self.sub_scan == 0.0] = self.max_dis  # 최대 측정 거리를 넘어가 값이 0.0 으로 들어올 때 max_dis 로 변환
