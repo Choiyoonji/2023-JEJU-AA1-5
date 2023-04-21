@@ -11,7 +11,7 @@ class erpreadTest:
         self.steer_sub= rospy.Subscriber('/steer_read', Int32, self.steer_callback, queue_size=1)
         self.state = ''
         self.erp_speed = 9999999
-        self.erp_steer = 999999
+        self.erp_steer = 9999999
         
     def state_callback(self, data):
         self.state = data.data    

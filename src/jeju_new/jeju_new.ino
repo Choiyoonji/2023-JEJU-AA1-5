@@ -80,7 +80,7 @@ void setMode(const geometry_msgs::Twist& msg){
     else goBackward(30);
   }
   else{
-    brake(0);
+    // brake(0);
     encoder();
   }
 }
@@ -155,7 +155,7 @@ void setCommand(const geometry_msgs::Twist& msg){
     }
   }
   else{
-    brake(0);
+    // brake(0);
     encoder();
   }
 }
