@@ -22,9 +22,9 @@ class DWA:
         self.erp = sub_erp_state()
 
         # 로봇의 운동학적 모델 상수 설정
-        self.max_speed = 100  # 최고 속도 [m/s]
+        self.max_speed = 3  # 최고 속도 [m/s]
         self.max_steer = np.deg2rad(22)  # 22도 [deg]
-        self.max_a = 10  # 내가 정하면 됨 [m/s^2]
+        self.max_a = 0.5  # 내가 정하면 됨 [m/s^2]
         self.max_steer_a = np.deg2rad(22)
 
         self.length = 1.35  # 차 길이 [m]
@@ -49,7 +49,8 @@ class DWA:
 
     def erp_callback(self, data):
         self.cur_steer = np.deg2rad(data.read_steer)  # [rad]
-        self.cur_speed = data.read_speed  # [m/s] <-- 여기 아직 수정 해줘야 함
+        # self.cur_speed = data.read_speed  # [m/s] <-- 여기 아직 수정 해줘야 함
+        self.cur_speed = 1.5  # 1.5 m/s
 
     # ↓↓ 비주얼 코드 ↓↓
     def visual_candidate_paths(self, candidate_paths):
