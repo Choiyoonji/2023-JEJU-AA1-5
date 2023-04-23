@@ -25,7 +25,7 @@ class mission_cruising:
         elif mode == 1:
             steer = self.PT_dwa.gps_tracking(pose, heading)
         else:
-            pass
+            steer = 0.0
         return steer
 
     def static_obstacle(self, pose, heading, speed, steer, obs, mode=MODE):
