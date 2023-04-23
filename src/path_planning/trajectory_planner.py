@@ -433,7 +433,7 @@ class TrajectoryPlanner: # path planner
                     max_distance = cur_distance
                     select_path = fp
         '''
-        print(select_path)
+        # print(select_path)
         return select_path
 
     def optimal_trajectory(self, x, y, heading, obs_xy, qf = ROAD_WIDTH/2, path_num = 5, path_len = 3,MACARON_TREAD=2):
@@ -454,7 +454,7 @@ class TrajectoryPlanner: # path planner
             if self.visual == True:
                 self.visual_selected(safe_candidate_paths[0])
                 self.max_curvature_pub(safe_candidate_paths[0], collision_count, path_len, heading)
-            print('trajec: ',safe_candidate_paths[0].x)
+            # print('trajec: ',safe_candidate_paths[0].x)
             return safe_candidate_paths[0]
 
         selected_path = self.__select_optimal_trajectory(safe_candidate_paths, obs_xy,MACARON_TREAD)

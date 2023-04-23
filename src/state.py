@@ -30,8 +30,7 @@ CRUISING_SPEED = 60
 if WHERE == 1: # 동국대 직선
     GLOBAL_PATH_NAME = "mh_gp_0420.npy" 
     mission_coord = {"crusing" : [0.0, 1299995.0], "Static_Obstacle" : [9995,9930],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [9999, 9999], "Delivery" : [999, 999],
+                    "Dynamic_Obstacle" : [99999.5, 99999.2],
                     "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],
                                                 [149998.9 - 9.0, 199948.9 + 4.0]], # 148.9
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -39,8 +38,7 @@ if WHERE == 1: # 동국대 직선
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
     mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],
+                    "Dynamic_Obstacle" : [9999, 9999],
                     "Traffic_light_straight" : [[9999, 9999],
                                                 [9999, 9999]], # 110.3, 248.6
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -48,8 +46,7 @@ elif WHERE == 2: # jeju track -> traffic none, ccw-cw
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
     GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
     mission_coord = {"crusing" : [0.0, 133.0], "Static_Obstacle" : [99999, 99999],
-                    "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [827.0, 856.0], "Delivery" : [376.0, 754.3],
+                    "Dynamic_Obstacle" : [9999, 9999],
                     "Traffic_light_straight" : [[178.2 - 15.0, 178.2 + 4.0],
                                                 [233.0 - 15.0, 233.0 + 4.0],
                                                 [366.5 - 15.0, 366.5 + 4.0],
@@ -64,8 +61,7 @@ elif WHERE == 3: # jeju track -> traffic available, cw-ccw
 elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
     GLOBAL_PATH_NAME = "jeju_island0.npy" #end is 125.2 start is 0.8 #start is 0.0 end is 26.5
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [9999, 9999], "Delivery" : [9999, 9999],
+                    "Dynamic_Obstacle" : [99999.5, 99999.2],
                     "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
                                                 [9106.8 - 15.0, 9106.8 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -73,8 +69,7 @@ elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
 elif WHERE == 5: # 직선 테스트
     GLOBAL_PATH_NAME = "MH_straight.npy" 
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [9999, 9999], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [9999, 9999], "Delivery" : [6000, 7000],
+                    "Dynamic_Obstacle" : [9999, 9999],
                     "Traffic_light_straight" : [[360.5 - 15.0, 360.5 + 4.0],
                                                 [360.5 - 15.0, 360.5 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -82,8 +77,7 @@ elif WHERE == 5: # 직선 테스트
 elif WHERE == 6: # 직선 테스트
     GLOBAL_PATH_NAME = "DP_straight.npy" 
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2], "Cross_Walk" : [9999, 9999],
-                    "School_Zone" : [9999, 9999], "Delivery" : [6000, 7000],
+                    "Dynamic_Obstacle" : [99999.5, 99999.2],
                     "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
                                                 [9106.8 - 15.0, 9106.8 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -125,10 +119,6 @@ class Mission_State():
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
             self.mission_zone = 0
         elif (distance(mission_coord["Static_Obstacle"], s)):
-            self.mission_zone = 0
-        elif (distance(mission_coord["Delivery"], s)):
-            self.mission_zone = 0
-        elif (distance(mission_coord["School_Zone"], s)):
             self.mission_zone = 0
         
         for i in mission_coord["Traffic_light_straight"]:
@@ -207,16 +197,10 @@ def main():
             print("떼굴떼굴---")
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = CRUISING_SPEED
-            
-
+        
         elif (MS.mission_state == 1): # 정적장애물 모드
             print("라봉아 피해!")
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
-            speed = CRUISING_SPEED
-        
-        
-        elif (MS.mission_state == 5): # 감속 모드
-            steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = CRUISING_SPEED
 
         # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
