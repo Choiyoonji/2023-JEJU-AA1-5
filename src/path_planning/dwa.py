@@ -10,16 +10,14 @@ from sub_erp_state import sub_erp_state
 
 
 class DWA:
-    def __init__(self, glob_path):
+    def __init__(self, glob_path, speed, steer):
         self.glob_path = glob_path
-        self.erp_sub = rospy.Subscriber('erp_read', erp_read, self.erp_callback, queue_size=1)
         self.candidate_pub = rospy.Publisher('/CDpath', PointCloud, queue_size=3)
         self.selected_pub = rospy.Publisher('/SLpath', PointCloud, queue_size=3)
 
         self.visual = True
         self.cd_path = None
         self.sel_path = None
-        self.erp = sub_erp_state()
 
         # 로봇의 운동학적 모델 상수 설정
         self.max_speed = 3  # 최고 속도 [m/s]
@@ -32,8 +30,8 @@ class DWA:
         self.tread = 0.67  # 같은 축의 바퀴 중심 간 거리 [m]
         self.wheel_base = 0.75  # 차축 간 거리 [m]
 
-        self.cur_speed = 0.0
-        self.cur_steer = 0.0
+        self.cur_speed = speed
+        self.cur_steer = steer
         self.current_s = 0.0
         self.current_q = 0.0
 
@@ -46,11 +44,6 @@ class DWA:
         self.w1 = 1  # global path 와의 이격
         self.w2 = 3  # obs 와의 거리
         self.w3 = 0  # global path 와의 heading 차이
-
-    def erp_callback(self, data):
-        self.cur_steer = np.deg2rad(data.read_steer)  # [rad]
-        # self.cur_speed = data.read_speed  # [m/s] <-- 여기 아직 수정 해줘야 함
-        self.cur_speed = 1.5  # 1.5 m/s
 
     # ↓↓ 비주얼 코드 ↓↓
     def visual_candidate_paths(self, candidate_paths):
