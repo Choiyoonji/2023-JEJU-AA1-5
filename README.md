@@ -5,7 +5,7 @@
 2023 국제 대학생 EV 자율주행 경진대회 AA 1/5 부분 알고리즘
 
 💻사용 기술
-- python
+- Python
 - ROS1
 - Arduino
 
