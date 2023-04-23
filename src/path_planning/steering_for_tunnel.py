@@ -57,9 +57,10 @@ def main():
 
     while not rospy.is_shutdown():
         time.sleep(0.1)
-        speed = 50
-        steer = Tunnel.get_steer()
-        pub.pub_erp(speed, steer)
+        if(Tunnel.mission_loc == 9):
+            speed = 50
+            steer = Tunnel.get_steer()
+            pub.pub_erp(speed, steer)
 
 
 if __name__ == '__main__':
