@@ -182,7 +182,7 @@ def main():
     GB = GlobalPath(gp_name)
 
     # 미션 선언
-    Mission_cruising = mission_cruising(GLOBAL_PATH_NAME, erp.erp_speed, erp.erp_steer)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
+    Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
 
 
     print("제주도 한라봉맛 마카롱")
@@ -203,7 +203,7 @@ def main():
         
         elif (MS.mission_state == 1): # 정적장애물 모드
             print("라봉아 피해!")
-            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
+            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading,erp.erp_speed, erp.erp_steer, erp.obs)
             speed = CRUISING_SPEED
 
         # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
