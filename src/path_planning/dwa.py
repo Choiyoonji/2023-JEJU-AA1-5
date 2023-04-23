@@ -103,7 +103,7 @@ class DWA:
         return dw
 
     def DWA(self, x, y, heading, speed, steer, obs_xy=None):
-        if obs_xy is None:
+        if len(obs_xy) == 0:
             obs_xy = [[0.0, 0.0]]
         self.current_s, self.current_q = self.glob_path.xy2sl(x, y)
 
