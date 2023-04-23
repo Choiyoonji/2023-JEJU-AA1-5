@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 # -- coding: utf-8 --
 import rospy
 from math import pi
 
 import os, sys
+import cv2
 import cv2
 from matplotlib import image
 import concurrent.futures
@@ -11,7 +12,16 @@ import numpy as np
 import time
 import os
 
+
 from std_msgs.msg import Float64
+
+class erp_pubpub:
+    def __init__(self):
+        self.erp_pub = rospy.Publisher("erp_write", erp_write, queue_size=1)
+        self.erp = erp_write()
+
+        self.steer = 0
+
 
 class lane_detection:
     def __init__(self):
@@ -367,10 +377,12 @@ class lane_detection:
     # self.erp.write_brake = brake
     
     def run(self):    
-        cap = cv2.VideoCapture(2)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
+        cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
-        # cap = cv2.VideoCapture(os.getcwd() + "/lane_detection/origin_code(C version)/sample_data/track-s.mkv")
+        # cap = os.getcwd() #현재 경로 헷갈릴때 확인하기(비디오 넣어서 확인할때만!)
+        # print(cap)
+        # cap = cv2.VideoCapture(os.getcwd() + "/catkin_ws/src/2023-JEJU-AA1-5-main/src/missions/track-s.mkv")
         # fourcc = cv2.VideoWriter_fourcc(*'X264')
         # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
 
