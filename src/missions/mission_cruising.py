@@ -16,22 +16,23 @@ mode = 1
 # noinspection PyPep8Naming
 class mission_cruising:
     def __init__(self, filename, file=0):
+        self.PT_tra = Path_Tracking(filename, file)
+        self.PT_dwa = Path_Tracking_DWA(filename, file)
+
+    def path_tracking(self, pose, heading, mode=1):
         if mode == 0:
-            self.PT = Path_Tracking(filename, file)
+            steer = self.PT_tra.gps_tracking(pose, heading)
         elif mode == 1:
-            self.PT = Path_Tracking_DWA(filename, file)
+            steer = self.PT_dwa.gps_tracking(pose, heading)
         else:
             pass
-
-    def path_tracking(self, pose, heading):
-        steer = self.PT.gps_tracking(pose, heading)
         return steer
 
-    def static_obstacle(self, pose, heading, speed, steer, obs):
+    def static_obstacle(self, pose, heading, speed, steer, obs, mode=1):
         if mode == 0:
-            steer = self.PT.gps_tracking(pose, heading, obs, path_num=9)
+            steer = self.PT_tra.gps_tracking(pose, heading, obs, path_num=9)
         elif mode == 1:
-            steer = self.PT.gps_tracking(pose, heading, speed, steer, obs)
+            steer = self.PT_dwa.gps_tracking(pose, heading, speed, steer, obs)
         else:
             pass
         return steer
