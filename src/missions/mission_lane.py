@@ -12,17 +12,19 @@ import numpy as np
 import time
 import os
 
-
+from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 
-class erp_pubpub:
+class PublishToErp:
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_write", erp_write, queue_size=1)
-        self.erp = erp_write()
+        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=30)
+        self.erp = Twist()
 
-        self.steer = 0
-
-
+    def pub_erp(self, speed, steer):
+        self.erp.linear.x = speed
+        self.erp.angular.z = steer
+        self.erp_pub.publish(self.erp)
+        
 class lane_detection:
     def __init__(self):
         self.prevCenter = []
@@ -422,9 +424,54 @@ class lane_detection:
         # out.release()
         cv2.destroyAllWindows()
         
-        
-test = lane_detection()
-test.run()
+def main():
+    rospy.init_node('lane_node', anonymous=True)
+    Lane = lane_detection()
+    pub = PublishToErp()
+    
+    cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
+    
+    speed = 50
+
+    while not rospy.is_shutdown():
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ... ")
+                break
+            
+            current = time.time()
+            h, w, _= frame.shape
+            
+            copy = frame
+            gaus = Lane.gauss(frame)
+            edges = cv2.Canny(gaus,50,150)
+            edges = Lane.region(edges)
+            
+            steer = Lane.divideLine(edges, copy)
+            print("steer :", steer)
+            cv2.imshow('edges', edges)
+            cv2.imshow('copy', copy)
+
+            print("time :", time.time() - current, "s")
+            
+            if cv2.waitKey(1) == ord('q'):
+                break
+            
+            steer = np.clip(steer,-22, 22)
+            pub.pub_erp(speed, steer)
+            
+        cap.release()
+        cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    main()
+
+
+# test = lane_detection()
 # test.run()
 
 # if __name__ == '__main__':
