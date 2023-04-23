@@ -20,16 +20,15 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(
 
 # noinspection PyPep8Naming
 class Path_Tracking_DWA:
-    def __init__(self, path, file=0):
+    def __init__(self, path, speed, steer, file=0):
         # 파일 경로 설정 (경로 파일이 아닌 직접 x,y 좌표 경로를 넣어 준다면 file 에 0이 아닌 수를 넣어 주면 된다)
         self.PP = PurePursuit()
         self.PID = PidControl(0.1)  # 0.1초에 한 번씩 함수가 실행 되므로
         self.Ki = 1.0
 
-        self.erp_speed = 0.0
-        self.erp_steer = 0.0
+        self.erp_speed = speed
+        self.erp_steer = steer
         self.erp_ENC = 0.0
-        self.erp_sub = rospy.Subscriber('/erp_read', erp_read, self.erp_callback, queue_size=1)
 
         if file == 0:
             GLOBAL_NPY = path
@@ -40,14 +39,7 @@ class Path_Tracking_DWA:
         else:
             glob_path = GlobalPath(x=path[0], y=path[1])
 
-        self.path_planner = DWA(glob_path=glob_path)
-
-    def erp_callback(self, data):
-        self.erp_speed = data.read_speed
-        self.erp_steer = data.read_steer
-        self.erp_ENC = data.read_ENC
-        if data.read_gear == 2 and self.erp_speed > 0:
-            self.erp_speed *= -1
+        self.path_planner = DWA(self.erp_speed, self.erp_steer, glob_path=glob_path)
 
     def det_Kd(self):
         if self.erp_speed >= 50:
@@ -63,7 +55,7 @@ class Path_Tracking_DWA:
             obs_xy = [[0.0, 0.0]]
 
         x, y = pose[0], pose[1]
-        selected_path = self.path_planner.DWA(x, y, heading, obs_xy)        # 경로 생성 및 선택
+        selected_path = self.path_planner.DWA(x, y, heading, obs_xy)   # 경로 생성 및 선택
         goal = [list(x) for x in zip(*selected_path)][0:2]
 
         # PID 제어 추가

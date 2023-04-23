@@ -10,7 +10,7 @@ from sub_erp_state import sub_erp_state
 
 
 class DWA:
-    def __init__(self, glob_path, speed, steer):
+    def __init__(self, speed, steer, glob_path):
         self.glob_path = glob_path
         self.candidate_pub = rospy.Publisher('/CDpath', PointCloud, queue_size=3)
         self.selected_pub = rospy.Publisher('/SLpath', PointCloud, queue_size=3)

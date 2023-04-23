@@ -15,11 +15,11 @@ mode = 1
 
 # noinspection PyPep8Naming
 class mission_cruising:
-    def __init__(self, filename, file=0):
+    def __init__(self, filename, speed, steer, file=0):
         if mode == 0:
             self.PT = Path_Tracking(filename, file)
         elif mode == 1:
-            self.PT = Path_Tracking_DWA(filename, file)
+            self.PT = Path_Tracking_DWA(filename, speed, steer, file)
         else:
             pass
 
