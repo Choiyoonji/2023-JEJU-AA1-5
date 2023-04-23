@@ -29,7 +29,7 @@ CRUISING_SPEED = 60
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
     GLOBAL_PATH_NAME = "mh_gp_0420.npy" 
-    mission_coord = {"crusing" : [99990.0, 1299995.0], "Static_Obstacle" : [0,9930],
+    mission_coord = {"crusing" : [99990.0, 1299995.0], "Static_Obstacle" : [0.0,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2],
                     "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],
                                                 [149998.9 - 9.0, 199948.9 + 4.0]], # 148.9
@@ -38,7 +38,7 @@ if WHERE == 1: # 동국대 직선
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
     mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [9999, 9999],
+                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
                     "Traffic_light_straight" : [[9999, 9999],
                                                 [9999, 9999]], # 110.3, 248.6
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -46,7 +46,7 @@ elif WHERE == 2: # jeju track -> traffic none, ccw-cw
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
     GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
     mission_coord = {"crusing" : [0.0, 133.0], "Static_Obstacle" : [99999, 99999],
-                    "Dynamic_Obstacle" : [9999, 9999],
+                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
                     "Traffic_light_straight" : [[178.2 - 15.0, 178.2 + 4.0],
                                                 [233.0 - 15.0, 233.0 + 4.0],
                                                 [366.5 - 15.0, 366.5 + 4.0],
@@ -61,7 +61,7 @@ elif WHERE == 3: # jeju track -> traffic available, cw-ccw
 elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
     GLOBAL_PATH_NAME = "jeju_island0.npy" #end is 125.2 start is 0.8 #start is 0.0 end is 26.5
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2],
+                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [999,9999],
                     "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
                                                 [9106.8 - 15.0, 9106.8 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -69,7 +69,7 @@ elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
 elif WHERE == 5: # 직선 테스트
     GLOBAL_PATH_NAME = "MH_straight.npy" 
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [9999, 9999],
+                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
                     "Traffic_light_straight" : [[360.5 - 15.0, 360.5 + 4.0],
                                                 [360.5 - 15.0, 360.5 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -77,7 +77,7 @@ elif WHERE == 5: # 직선 테스트
 elif WHERE == 6: # 직선 테스트
     GLOBAL_PATH_NAME = "DP_straight.npy" 
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2],
+                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [999,9999],
                     "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
                                                 [9106.8 - 15.0, 9106.8 + 4.0],],
                     "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
@@ -116,11 +116,13 @@ class Mission_State():
 
         if (distance(mission_coord["crusing"], s)):
             self.mission_zone = 0
-        elif (distance(mission_coord["Dynamic_Obstacle"], s)):
-            self.mission_zone = 0
         elif (distance(mission_coord["Static_Obstacle"], s)):
-            self.mission_zone = 0
-        
+            self.mission_zone = 1
+        elif (distance(mission_coord["Dynamic_Obstacle"], s)):
+            self.mission_zone = 2
+        elif (distance(mission_coord["lane"], s)):
+            self.mission_zone = 3
+            
         for i in mission_coord["Traffic_light_straight"]:
             if (distance(i, s)):
                 self.mission_zone_trf = 8
@@ -189,7 +191,8 @@ def main():
     while not rospy.is_shutdown():
         print('====================================')
         s, q = GB.xy2sl(erp.pose[0], erp.pose[1])
-        print(s), 'current s'
+        print('current s', s)
+        print('current q', q)
         print(erp.states)
         state = MS.mission_update(s)
 

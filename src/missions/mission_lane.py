@@ -1,6 +1,6 @@
 # #!/usr/bin/env python
 # -- coding: utf-8 --
-
+import rospy
 from math import pi
 
 import os, sys
