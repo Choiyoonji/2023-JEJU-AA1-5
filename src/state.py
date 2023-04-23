@@ -29,7 +29,7 @@ CRUISING_SPEED = 60
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
     GLOBAL_PATH_NAME = "mh_gp_0420.npy" 
-    mission_coord = {"crusing" : [0.0, 1299995.0], "Static_Obstacle" : [9995,9930],
+    mission_coord = {"crusing" : [99990.0, 1299995.0], "Static_Obstacle" : [0,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2],
                     "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],
                                                 [149998.9 - 9.0, 199948.9 + 4.0]], # 148.9
@@ -200,7 +200,7 @@ def main():
         
         elif (MS.mission_state == 1): # 정적장애물 모드
             print("라봉아 피해!")
-            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs)
+            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.obs, erp.erp_speed, erp.erp_steer)
             speed = CRUISING_SPEED
 
         # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
