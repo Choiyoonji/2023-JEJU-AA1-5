@@ -10,7 +10,7 @@ from sub_erp_state import sub_erp_state
 
 
 class DWA:
-    def __init__(self, speed, steer, glob_path):
+    def __init__(self, glob_path):
         self.glob_path = glob_path
         self.candidate_pub = rospy.Publisher('/CDpath', PointCloud, queue_size=3)
         self.selected_pub = rospy.Publisher('/SLpath', PointCloud, queue_size=3)
@@ -30,8 +30,6 @@ class DWA:
         self.tread = 0.67  # 같은 축의 바퀴 중심 간 거리 [m]
         self.wheel_base = 0.75  # 차축 간 거리 [m]
 
-        self.cur_speed = speed
-        self.cur_steer = steer
         self.current_s = 0.0
         self.current_q = 0.0
 
@@ -104,7 +102,7 @@ class DWA:
         dw = [DWA_velocity, DWA_steer]
         return dw
 
-    def DWA(self, x, y, heading, obs_xy=None):
+    def DWA(self, x, y, heading, speed, steer, obs_xy=None):
         if obs_xy is None:
             obs_xy = [[0.0, 0.0]]
         self.current_s, self.current_q = self.glob_path.xy2sl(x, y)
@@ -130,7 +128,7 @@ class DWA:
         """
 
         best_cost = float('inf')
-        best_actual = [self.cur_speed, self.cur_steer]
+        best_actual = [speed, steer]
         candidate_paths, selected_path = [], []
 
         dw = self.calc_dynamic_window(best_actual[0])
