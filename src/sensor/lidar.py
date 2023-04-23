@@ -20,7 +20,7 @@ class lidar:
         for i in range(0, 540):
             scan_data_for_search.append(last_scan_data[i+135])  # 정면 0° 기준 -90° ~ 90°
             if 0.1 <= scan_data_for_search[i] <= 15:
-                obs_x = scan_data_for_search[i] * sin(np.deg2rad(float(i) / resolution)) + 1.35
+                obs_x = scan_data_for_search[i] * sin(np.deg2rad(float(i) / resolution)) + 1.1
                 obs_y = -scan_data_for_search[i] * cos(np.deg2rad(float(i) / resolution))
                 self.obs_xy = np.append(self.obs_xy, [np.dot(T, np.transpose([obs_x, obs_y, 1]))], axis=0)
             else:
