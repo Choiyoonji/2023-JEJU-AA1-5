@@ -7,12 +7,15 @@ import numpy as np
 from sensor_msgs.msg import LaserScan
 # noinspection PyUnresolvedReferences
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int16
 
 
 class SteeringInTunnel:
     def __init__(self):
         self.laser_sub = rospy.Subscriber('/scan', LaserScan, self.scan_callback, queue_size=1)
+        self.mission_sub = rospy.Subscriber('/mission', Int16, self.mission_callback, queue_size=1)
         self.sub_scan = []
+        self.mission_loc = 0
         # self.wheel_base = 0.75  # 차축 간 거리 [m]
         self.width = 0.77  # 차 폭 [m]
         # self.length = 1.35  # 차 길이 [m]
@@ -24,6 +27,9 @@ class SteeringInTunnel:
         sub_scan = np.array(scan.ranges[0:810 + 1:3])
         print('type : ', type(scan.ranges[405]))
         self.sub_scan = np.where(np.array(sub_scan >= self.max_dis, self.max_dis, sub_scan))
+        
+    def mission_callback(self, data):
+        self.mission_loc = data.data
 
     def get_steer(self):
         # self.sub_scan[self.sub_scan == 'inf'] = self.max_dis  # 최대 측정 거리를 넘어가 값이 'inf' 로 들어올 때 max_dis 로 변환
