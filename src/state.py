@@ -204,7 +204,7 @@ def main():
         elif (MS.mission_state == 1): # 정적장애물 모드
             print("라봉아 피해!")
             
-            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading,erp.erp_speed, erp.erp_steer, erp.obs)
+            steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.erp_speed, erp.erp_steer, erp.obs)
             speed = CRUISING_SPEED
 
         # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
