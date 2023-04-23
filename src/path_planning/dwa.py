@@ -41,7 +41,7 @@ class DWA:
         # cost function 에서 사용 되는 가중치
         self.w1 = 1  # global path 와의 이격
         self.w2 = 3  # obs 와의 거리
-        self.w3 = 0  # global path 와의 heading 차이
+        self.w3 = 1  # global path 와의 heading 차이
 
     # ↓↓ 비주얼 코드 ↓↓
     def visual_candidate_paths(self, candidate_paths):
@@ -103,6 +103,7 @@ class DWA:
         return dw
 
     def DWA(self, x, y, heading, speed, steer, obs_xy=None):
+        speed = 2.0
         if len(obs_xy) == 0:
             obs_xy = [[0.0, 0.0]]
         self.current_s, self.current_q = self.glob_path.xy2sl(x, y)

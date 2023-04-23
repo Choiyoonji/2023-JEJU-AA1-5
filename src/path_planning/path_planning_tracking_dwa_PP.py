@@ -66,7 +66,7 @@ class Path_Tracking_DWA:
             else:
                 I_steer = self.PID.I_control(self.path_planner.current_q)
 
-        Kp = 1.0
+        Kp = 1.5
         Kd = self.det_Kd(speed)
         Ki = self.Ki
 

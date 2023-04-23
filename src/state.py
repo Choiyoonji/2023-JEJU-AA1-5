@@ -24,11 +24,11 @@ WHERE = 1
 global kkk
 kkk = 122 #where2-> 122 #where3-> 133
 
-CRUISING_SPEED = 60
+CRUISING_SPEED = 80
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "mh_gp_0420.npy" 
+    GLOBAL_PATH_NAME = "mh_0314.npy" 
     mission_coord = {"crusing" : [99990.0, 1299995.0], "Static_Obstacle" : [0.0,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2],
                     "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],
@@ -203,6 +203,7 @@ def main():
         
         elif (MS.mission_state == 1): # 정적장애물 모드
             print("라봉아 피해!")
+            
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading,erp.erp_speed, erp.erp_steer, erp.obs)
             speed = CRUISING_SPEED
 
@@ -212,6 +213,7 @@ def main():
             speed = 0
 
         # rospy.sleep(3)
+        print("steer: %d speed: %d"%(steer, speed))
         pub.pub_erp(speed, steer)
         # print(erp.trffic, 'traffic_info')
         rate.sleep()

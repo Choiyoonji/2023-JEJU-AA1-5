@@ -11,7 +11,7 @@
 
 # << 실행 방법 >>
 # 1. state.py와 bag파일 실행(bag파일 관련 내용은 마카롱 카페에 자세하게 나와 있음)
-# 2. visualization.lauch 실행 또는 visualization.py와 rviz 실행(rviz>file>open config 에서 macaron_5>rviz에 있는 macaron_5.rviz 실행)
+# 2. visualization.lauch 실행 또는 visualization.py와 rviz 실행(rviz>file>open config 에서 macaron_4>rviz에 있는 macaron_4.rviz 실행)
 
 from matplotlib import offsetbox
 import rospy
@@ -26,7 +26,7 @@ from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan, NavSatFix, PointCloud, Imu
 from std_msgs.msg import Header, Float64, ColorRGBA
 
-WHERE = 2
+WHERE = 5
 where = 1 # 1 DGU 2 kcity 3 서울대 시흥캠퍼스
 
 #지도 정보 경로 설정
@@ -44,13 +44,13 @@ Tracking_path=[]
 if WHERE == 1:
     Tracking_path="PG.npy" #대운동장 전체 경로
 elif WHERE == 2:
-    Tracking_path="mh_gp_0420.npy"
+    Tracking_path="yaeseon_xy.npy"
 elif WHERE == 3:
     Tracking_path="bonseon.npy"
 elif WHERE == 4:
     Tracking_path="mh_lidar.npy" #만해 한 바퀴
 elif WHERE == 5:
-    Tracking_path="mh_stair_in.npy" #만해 배달 바퀴
+    Tracking_path="mh_0314.npy" 
 elif WHERE == 6:
     # Tracking_path="kcity_trial1.npy" #대운동장 직선만 
     # Tracking_path="PG.npy" #대운동장 전체 경로
@@ -67,8 +67,7 @@ elif WHERE == 7:
     # Tracking_path = "snu_camera_test_curve.npy" #차선보정용 직선 흔들 코스
     # Tracking_path = "snu_testmap1.npy"
     # Tracking_path = "track_map3.npy"
-    Tracking_path = ["mhgp_0324.npy","mhlline_0324.npy","mhrline_0324.npy"]
-    # Tracking_path = "won230111.npy"
+    Tracking_path = "mh_green.npy"
 elif WHERE == 8:
     Tracking_path="kcity_uturn.npy"
 elif WHERE == 9:
@@ -375,7 +374,7 @@ class Visualization():
         for b in self.erp.obs:
             d = ((self.erp.pose[0] - b[0])**2 + (self.erp.pose[1] - b[1])**2)**0.5
             print(d)
-            if d <= 3 : #### 이것만 괜찮은 거리로 고치면 돼
+            if d <= 10 : #### 이것만 괜찮은 거리로 고치면 돼
                 rviz_msg_obs=Marker(
                     header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
                     ns="obs",
@@ -383,7 +382,7 @@ class Visualization():
                     type=Marker.CYLINDER,
                     lifetime=rospy.Duration(0.5),
                     action=Marker.ADD,
-                    scale=Vector3(0.4,0.4,0.8),
+                    scale=Vector3(0.5,0.5,1.0),
                     color=ColorRGBA(1.0,0.85,0.8,1.0),
                     pose=Pose(position=Point(x = b[0]-self.offset[0], y = b[1]-self.offset[1], z = 0.0))
                 )
@@ -397,7 +396,7 @@ class Visualization():
                     type=Marker.SPHERE,
                     lifetime=rospy.Duration(0.5),
                     action=Marker.ADD,
-                    scale=Vector3(0.4,0.4,0.2),
+                    scale=Vector3(0.2,0.2,0.2),
                     color=ColorRGBA(1.0,0.0,0.0,1.0),
                     pose=Pose(position=Point(x = b[0]-self.offset[0], y = b[1]-self.offset[1], z = 0.5))
                 )
@@ -406,7 +405,7 @@ class Visualization():
 
     def present_MAP(self,ID,R,G,B,A): #전역경로
         i=ID
-        if WHERE == 9 or WHERE == 7:
+        if WHERE == 9:
             for j in range(len(Tracking_path)):
                 rviz_msg_map=Marker(
                 header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
@@ -532,8 +531,8 @@ def main():
                 Vis.present_OBS(Marker.CYLINDER,0.2,0.2,0.2,0.2,0.2,0.2,1.0,0.5) #미션 시작과 끝
                 count = 0
 
-            # Vis.present_LINE(101,1.0,0.0,0.0,1.0,2,True) #pathLOG #내가 지나온 길을 pub해주는 메서드
-            Vis.present_OBJECT(100,Marker.ARROW,1.0,0.3,0.3,0.0,1.0,0.0,1.0) #presentPOSE() #현재 내 위치랑 헤딩방향을 pub 해주는 메서드
+            Vis.present_LINE(101,1.0,0.0,0.0,1.0,2,True) #pathLOG #내가 지나온 길을 pub해주는 메서드
+            Vis.present_OBJECT(100,Marker.ARROW,2.0,0.5,0.5,0.0,1.0,0.0,1.0) #presentPOSE() #현재 내 위치랑 헤딩방향을 pub 해주는 메서드
             # Vis.present_OBS(Marker.SPHERE,0.2,0.2,0.2,1.0,0.0,0.0,1.0,0.5) #vis_obs
             Vis.present_OBS1() #캡스톤
             # Vis.present_OBS(Marker.CYLINDER,0.5,0.5,2.0,1.0,0.7,0.0,1.0,0.0,True) #vis_obs_sign
@@ -548,7 +547,7 @@ def main():
         Vis.present_MAP(102,0.0,1.0,0.0,0.7) #전역경로
 
         while not rospy.is_shutdown():
-            # Vis.present_LINE(101,1.0,0.0,0.0,1.0,2,True) #pathLOG #내가 지나온 길을 pub해주는 메서드
+            Vis.present_LINE(101,1.0,0.0,0.0,1.0,2,True) #pathLOG #내가 지나온 길을 pub해주는 메서드
             Vis.present_OBJECT(100,Marker.ARROW,2.0,0.5,0.5,0.0,1.0,0.0,1.0) #presentPOSE() #현재 내 위치랑 헤딩방향을 pub 해주는 메서드
             Vis.present_OBS(Marker.SPHERE,0.2,0.2,0.2,1.0,0.0,0.0,1.0,0.5) #vis_obs
             Vis.present_OBS(Marker.CYLINDER,0.5,0.5,2.0,1.0,0.7,0.0,1.0,0.0,True) #vis_obs_sign

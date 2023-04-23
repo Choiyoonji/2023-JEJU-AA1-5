@@ -28,6 +28,8 @@ class lidar:
                 self.obs_xy = np.append(self.obs_xy, [np.dot(T, np.transpose([obs_x, obs_y, 1]))], axis=0)
         self.obs_xy[:,2] = 0
         
+        return  self.obs_xy
+        
     def tf_tm_yd(self, scan, x , y, heading) :
         self.obs_xy = np.empty((1, 3))
         resolution = 2

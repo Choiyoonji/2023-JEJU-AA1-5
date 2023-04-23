@@ -1,10 +1,9 @@
-# #!/usr/bin/env python
+#!/usr/bin/env python
 # -- coding: utf-8 --
 import rospy
 from math import pi
 
 import os, sys
-import cv2
 import cv2
 from matplotlib import image
 import concurrent.futures
@@ -368,10 +367,12 @@ class lane_detection:
     # self.erp.write_brake = brake
     
     def run(self):    
-        # cap = cv2.VideoCapture(2)
-        cap = cv2.VideoCapture(os.getcwd() + "/lane_detection/origin_code(C version)/sample_data/track-s.mkv")
-        fourcc = cv2.VideoWriter_fourcc(*'X264')
-        out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
+        cap = cv2.VideoCapture(2)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
+        # cap = cv2.VideoCapture(os.getcwd() + "/lane_detection/origin_code(C version)/sample_data/track-s.mkv")
+        # fourcc = cv2.VideoWriter_fourcc(*'X264')
+        # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
 
         
 
@@ -406,7 +407,7 @@ class lane_detection:
                 
 
         cap.release()
-        out.release()
+        # out.release()
         cv2.destroyAllWindows()
         
         
