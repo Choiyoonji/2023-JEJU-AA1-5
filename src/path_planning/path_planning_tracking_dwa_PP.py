@@ -47,10 +47,13 @@ class Path_Tracking_DWA:
             Kd = 4
         return Kd
 
-    def gps_tracking(self, pose, heading, speed, steer, obs_xy=None):
+    def gps_tracking(self, pose, heading, speed=None, steer=None, obs_xy=None):
         if obs_xy is None:
             obs_xy = [[0.0, 0.0]]
-
+        if speed is None:
+            speed = 0.0
+        if steer is None:
+            steer = 0.0
         x, y = pose[0], pose[1]
         selected_path = self.path_planner.DWA(x, y, heading, speed, steer, obs_xy)   # 경로 생성 및 선택
         goal = [list(x) for x in zip(*selected_path)][0:2]
