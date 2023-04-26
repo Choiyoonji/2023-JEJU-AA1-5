@@ -25,7 +25,7 @@
 # 테스트 해야하는 부분
 
 **planning**
-- [ ] 정적 장애물 - DWA 알고리즘
+- [x] 정적 장애물 - DWA 알고리즘
 
 **tracking**
 - [ ] pure pursuit LD
