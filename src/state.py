@@ -14,7 +14,7 @@ import numpy as np
 
 # message 파일
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Bool, String, Int16
+from std_msgs.msg import Bool, Int16
 from sensor_msgs.msg import LaserScan
 # from sensor_msgs import PointCloud
 
@@ -99,7 +99,7 @@ class Mission_State():
         self.laser_sub = rospy.Subscriber('/scan', LaserScan, self.scan_callback, queue_size=1)
         self.sub_scan = []
         
-        self.steer_sub = rospy.Subscriber("lane_steer", Int16, self.lane_callback, queue_size=30)
+        self.steer_sub = rospy.Subscriber("lane_steer", Int16, self.lane_callback, queue_size=10)
         self.lane_steer = 0.0
         
     def scan_callback(self, scan):

@@ -16,7 +16,7 @@ from std_msgs.msg import Float64, Int16
 
 class PublishToState:
     def __init__(self):
-        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=30)
+        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=10)
         self.steer = Int16()
 
     def pub_erp(self, steer):
@@ -37,8 +37,10 @@ class lane_detection:
         
     def grey(self, image):
         return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    
     def gauss(self, image):
         return cv2.GaussianBlur(image, (5, 5), 0)
+    
     def canny(self, image):
         edges = cv2.Canny(image,50,150)
         return edges

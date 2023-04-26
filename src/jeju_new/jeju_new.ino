@@ -80,7 +80,6 @@ void setMode(const geometry_msgs::Twist& msg){
     else goBackward(30);
   }
   else{
-    brake(0);
     encoder();
   }
 }
@@ -155,7 +154,6 @@ void setCommand(const geometry_msgs::Twist& msg){
     }
   }
   else{
-    brake(0);
     encoder();
   }
 }
@@ -261,11 +259,6 @@ int encoder()
 			counter --;                         // 카운팅 용 숫자 1 감소
 			currentDir ="좌회전";
 		}
-      
-		// Serial.print("회전방향: ");             
-		// Serial.print(currentDir);           //회전방향 출력
-		// Serial.print(" | Counter: ");
-		// Serial.println(counter);           // 회전 카운팅 출력
 	}
 
 	// 현재의 CLK상태를 저장
@@ -281,6 +274,7 @@ void setup() {
 
   nh.subscribe(getCMD);
   nh.subscribe(erp_write);
+
   nh.advertise(state_read);
   nh.advertise(speed_read);
   nh.advertise(steer_read);
@@ -290,9 +284,11 @@ void setup() {
   pinMode(RUN_DIR, OUTPUT);
   pinMode(RUN_PWM, OUTPUT);
   pinMode(RUN_BRK, OUTPUT);
+
   pinMode(STEER_DIR, OUTPUT);
   pinMode(STEER_PWM, OUTPUT);
   pinMode(STEER_BRK, OUTPUT);
+
   pinMode(CLK,INPUT);
 	pinMode(DT,INPUT);
 
@@ -325,7 +321,6 @@ void loop() {
   state_read.publish(&read_state);
   speed_read.publish(&read_speed);
   steer_read.publish(&read_steer);
-  // ErpRead.publish(&erpRead);
   
   nh.spinOnce();
 
