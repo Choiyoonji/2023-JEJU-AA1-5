@@ -137,6 +137,8 @@ class Mission_State():
             self.mission_zone = 1
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
             self.mission_zone = 2
+            
+        self.mission_zone = 3
 
     def mission_update(self, s):
         self.mission_loc(s)
@@ -214,7 +216,7 @@ def main():
                 MS.mission_done()
                 
         elif MS.mission_state == 3:
-            print("")
+            print("누끼 장인 두둥등장 !!  ༼'๑ ◕ ⊖ ◕ ๑༽ ")
             steer = MS.lane_steer
             speed = LANE_SPEED
                 
