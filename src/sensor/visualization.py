@@ -27,7 +27,7 @@ from sensor_msgs.msg import LaserScan, NavSatFix, PointCloud, Imu
 from std_msgs.msg import Header, Float64, ColorRGBA
 
 WHERE = 5
-where = 1 # 1 DGU 2 kcity 3 서울대 시흥캠퍼스
+where = 1 # 1 DGU 2 kcity
 
 #지도 정보 경로 설정
 PATH_ROOT=(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/" #/home/gigi/catkin_ws/src/macaron_3/
@@ -533,8 +533,7 @@ def main():
 
             Vis.present_LINE(101,1.0,0.0,0.0,1.0,2,True) #pathLOG #내가 지나온 길을 pub해주는 메서드
             Vis.present_OBJECT(100,Marker.ARROW,2.0,0.5,0.5,0.0,1.0,0.0,1.0) #presentPOSE() #현재 내 위치랑 헤딩방향을 pub 해주는 메서드
-            # Vis.present_OBS(Marker.SPHERE,0.2,0.2,0.2,1.0,0.0,0.0,1.0,0.5) #vis_obs
-            Vis.present_OBS1() #캡스톤
+            Vis.present_OBS(Marker.SPHERE,0.2,0.2,0.2,1.0,0.0,0.0,1.0,0.5) #vis_obs
             # Vis.present_OBS(Marker.CYLINDER,0.5,0.5,2.0,1.0,0.7,0.0,1.0,0.0,True) #vis_obs_sign
 
             Vis.present_LINE(301,0.0,1.0,0.0,0.8,1) #track_GBpath

@@ -22,8 +22,7 @@ class SteeringInTunnel:
     def scan_callback(self, scan):
         # self.sub_scan = list(scan.ranges[0:810+1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
         sub_scan = np.array(scan.ranges[0:810 + 1:3])
-        print('type : ', type(scan.ranges[405]))
-        self.sub_scan = np.where(np.array(sub_scan >= self.max_dis, self.max_dis, sub_scan))
+        self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)
 
     def get_steer(self):
         # self.sub_scan[self.sub_scan == 'inf'] = self.max_dis  # 최대 측정 거리를 넘어가 값이 'inf' 로 들어올 때 max_dis 로 변환

@@ -460,7 +460,7 @@ def main():
             if cv2.waitKey(1) == ord('q'):
                 break
             
-            steer = np.clip(steer,-22, 22)
+            steer = np.clip(steer, -22, 22)
             pub.pub_erp(speed, steer)
             
         cap.release()
