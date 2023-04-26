@@ -42,10 +42,11 @@ stop_dis = stop_dis + car_f_offset
 
 class mission_dynamic_obstacle():
     def __init__(self, where):
+        PATH =  (os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/path/"
         if where == 1:
             self.mission_np = np.load(file = (os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/path/yaeseon_xy.npy")
         else:
-            self.mission_np = np.load(file = where)
+            self.mission_np = np.load(file = PATH + where)
         
         self.state = "go" #기본값 "go"
         self.done = False

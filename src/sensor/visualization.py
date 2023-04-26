@@ -141,6 +141,7 @@ class Visualization():
         self.track_gb_sub = rospy.Subscriber('/track_gbpath', PointCloud, self.track_GBpath_callback, queue_size = 1)
         self.sign_sub = rospy.Subscriber('/sign', PointCloud, self.sign_loc_callback, queue_size = 1)
 
+        self.reset = False
         if where == 1: self.offset = [955926.9659, 1950891.243]
         elif where == 2 : self.offset = [935482.4315, 1915791.089]
         elif where == 3 :self.offset = [931326.1071073, 1929913.8061744] 
