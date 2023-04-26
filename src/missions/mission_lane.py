@@ -12,18 +12,16 @@ import numpy as np
 import time
 import os
 
-from geometry_msgs.msg import Twist
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Int16
 
-class PublishToErp:
+class PublishToState:
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=30)
-        self.erp = Twist()
+        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=30)
+        self.steer = Int16()
 
-    def pub_erp(self, speed, steer):
-        self.erp.linear.x = speed
-        self.erp.angular.z = steer
-        self.erp_pub.publish(self.erp)
+    def pub_erp(self, steer):
+        self.steer = steer
+        self.steer_pub(self.steer)
         
 class lane_detection:
     def __init__(self):
@@ -427,7 +425,7 @@ class lane_detection:
 def main():
     rospy.init_node('lane_node', anonymous=True)
     Lane = lane_detection()
-    pub = PublishToErp()
+    pub = PublishToState()
     
     cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
@@ -461,7 +459,7 @@ def main():
                 break
             
             steer = np.clip(steer, -22, 22)
-            pub.pub_erp(speed, steer)
+            pub.pub_erp(steer)
             
         cap.release()
         cv2.destroyAllWindows()
@@ -470,27 +468,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-
-# test = lane_detection()
-# test.run()
-
-# if __name__ == '__main__':
-    
-#     test = lane_detection()
-
-#     start = time.time()
-
-#     total_result = 0
-#     pool = concurrent.futures.ProcessPoolExecutor(max_workers=4)
-
-#     procs = []
-#     for i in range(4):
-#         procs.append(pool.submit(test.run, i))
-
-#     for p in concurrent.futures.as_completed(procs):
-#         total_result += p.result()
-
-#     end = time.time()
-
-#     print("수행시간: %f 초" % (end - start))
-#     print("총결괏값: %s" % total_result)
