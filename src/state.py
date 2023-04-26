@@ -137,8 +137,6 @@ class Mission_State():
             self.mission_zone = 1
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
             self.mission_zone = 2
-            
-        self.mission_zone = 3
 
     def mission_update(self, s):
         self.mission_loc(s)
