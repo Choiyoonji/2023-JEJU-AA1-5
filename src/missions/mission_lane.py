@@ -223,9 +223,6 @@ class lane_detection:
             avgRX = int(np.mean(RX, axis=0))
             avgRY = int(np.mean(RY, axis=0))
             
-            # il, ir = len(left), len(right)
-            # center = ((left[il // 2][0] + right[ir // 2][0]) // 2, (left[il // 2][1] + right[ir // 2][1]) // 2)
-            
             # if 450 < LY[0] < 640:
             for x, y in zip(LX, LY):
                 cv2.circle(copy, (x, y), 2, (0, 0, 255), -1)
@@ -305,29 +302,6 @@ class lane_detection:
                     center[0] -= int(b * abs(abs(rk) - abs(lk)))
                     
             print("center :", center)
-            # self.prevRawCenter.append(center[0])
-            
-            # PREVENT_ERROR = 15
-            # TURN_SLOWLY = 6 * self.toReduce
-            # if self.frameLength > 5 or self.continueToRevise == 1:
-            #     # for i in range(self.frameLength - 5, self.frameLength):
-            #     # self.sumError += abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY * (TURN_SLOWLY - 1)
-                
-            #     if abs(center[0] - self.prevCenter[-1]) > PREVENT_ERROR:
-            #         if self.currentDirection == -1:
-            #             center[0] = int(self.prevCenter[-1] - abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY) 
-            #         if self.currentDirection == 1:
-            #             center[0] = int(self.prevCenter[-1] + abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY)
-                
-                
-            #     self.continueToRevise = 1
-            #     self.toReduce += 0.03
-            #     self.prevCenter.append(center[0])
-                
-            #     self.frameLength += 1
-            # else:
-            #     self.prevCenter.append(center[0])
-            #     self.frameLength += 1
                 
                 
             if center[0] > w // 2:
@@ -339,44 +313,8 @@ class lane_detection:
             cv2.circle(copy, tuple(center), 10, (0, 255, 0), -1)
             
             return center[0] - w // 2 # 최종 steer값 -면 왼쪽, +면 오른쪽
-            
-        # if (len(right) < 2): 
-        #     print("Turn right!!!!")
-        # else:
-        #     print("left :", left[0], left[-1])
-        #     print("right :", right[0], right[-1])
-        #     x, y = extendLine(right[0], right[-1])
-        #     cv2.circle(copy, right[0])
-        #     cv2.line(copy, right[0], right[-1], (0, 0, 255), 5)
-            
-        # if (len(left) < 2): 
-        #     print("Turn left!!!!")
-        # else:
-        #     print("left :", left[0], left[-1])
-        #     print("right :", right[0], right[-1])
-        #     x, y = extendLine(left[0], left[-1])
-        #     cv2.line(copy, left[0], left[-1], (0, 0, 255), 5)
         
-        
-        return img
-###############################################################333
-    # def erp_callback(self, data):
-    #     self.erp_speed = data.read_speed
-    #     self.erp_steer = data.read_steer
-
-    # def pub_serial(self, speed): #gear removed
-    #     speed, self.steer = int(speed), int(self.steer)
-    #     speed = 60 #fixed
-    #     # if brake <= 1:
-    #     #     brake = 1
-    #     # elif brake >= 200:
-    #     #     brake = 200
-
-    #     self.erp.write_speed = speed
-    #     self.erp.write_steer = self.steer
-
-    #     self.erp_pub.publish(self.erp)
-    # self.erp.write_brake = brake
+        return 0.0
     
     def run(self):    
         cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨

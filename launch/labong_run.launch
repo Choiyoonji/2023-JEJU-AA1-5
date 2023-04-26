@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+
+    <node name="state_node" pkg="jeju"  type="state.py"
+     />
+    
+    <node name="lane_node" pkg="jeju"  type="mission_lane.py"
+     />
+
+</launch>

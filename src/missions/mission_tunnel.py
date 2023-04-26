@@ -41,17 +41,17 @@ class PublishToErp:
         self.erp_pub.publish(self.erp)
 
 
-def main():
-    rospy.init_node('tunnel_node', anonymous=True)
-    Tunnel = mission_tunnel()
-    pub = PublishToErp()
+# def main():
+#     rospy.init_node('tunnel_node', anonymous=True)
+#     Tunnel = mission_tunnel()
+#     pub = PublishToErp()
 
-    while not rospy.is_shutdown():
-        time.sleep(0.1)
-        speed = 50
-        steer = Tunnel.get_steer()
-        pub.pub_erp(speed, steer)
+#     while not rospy.is_shutdown():
+#         time.sleep(0.1)
+#         speed = 50
+#         steer = Tunnel.get_steer()
+#         pub.pub_erp(speed, steer)
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
