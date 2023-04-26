@@ -46,7 +46,8 @@ class mission_tunnel:
 
     def search_tunnel_entrance(self):
         scan_data = self.sub_scan[45:225 + 1]
-        max_index, second_index = sorted(self.find_largest_second_largest(scan_data))
+        change_rate_list = [abs(scan_data[i] - scan_data[i + 1]) for i in range(len(scan_data) - 1)]
+        max_index, second_index = sorted(self.find_largest_second_largest(change_rate_list))
         center_angle = int(len(scan_data) * 0.5)
         first_angle, second_angle = max_index - center_angle, second_index - center_angle
         if first_angle >= 60 and second_angle <= -60:
@@ -57,7 +58,7 @@ class mission_tunnel:
         r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]  # 정면 0° 기준 좌우 60° ~ 80° 범위 거리 데이터
         r_avg, l_avg = np.sum(r_data) / len(r_data), np.sum(l_data) / len(l_data)  # 60° ~ 80° 범위의 거리 값들의 평균
         steer = ((r_avg - l_avg) / (self.tunnel_width - self.width)) * 1.1 * 22  # (-1 ~ 1 로 정규화) * 1.1(가중치) * 22(steer)
-        if r_avg == self.max_dis and l_avg == self.max_dis:
+        if r_avg >= self.tunnel_width and l_avg >= self.tunnel_width:
             self.tunnel_flag = False
         return np.clip(steer, -22, 22)
 
