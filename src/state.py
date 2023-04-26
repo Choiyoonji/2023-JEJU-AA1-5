@@ -109,7 +109,11 @@ class Mission_State():
     
     def is_Tunnel(self):
         r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]
-        r_avg, l_avg = np.sum(r_data) / len(r_data), np.sum(l_data) / len(l_data) 
+        if len(r_data) > 0 and len(l_data) > 0:
+            r_avg, l_avg = np.sum(r_data) / len(r_data), np.sum(l_data) / len(l_data) 
+        else:
+            r_avg = 999999
+            l_avg = 999999
         if r_avg + l_avg < self.Tunnel_width:
             return True
         else:
