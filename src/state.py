@@ -35,25 +35,25 @@ LANE_SPEED = 50
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
     GLOBAL_PATH_NAME = "mh_0314.npy" 
-    mission_coord = {"crusing" : [0.0, 1299995.0], "Static_Obstacle" : [0.0,9930],
+    mission_coord = {"Static_Obstacle" : [0.0,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [0.0,0.0],
                     "Tunnel" : [9999, 9999]}
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
-    mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [9999, 9999],
+    mission_coord = {"Static_Obstacle" : [9999, 9999],
                     "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
                     "Tunnel" : [9999, 9999]}
 
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
     GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
-    mission_coord = {"crusing" : [0.0, 133.0], "Static_Obstacle" : [99999, 99999],
+    mission_coord = {"Static_Obstacle" : [99999, 99999],
                     "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
                     "Tunnel" : [9999, 9999]}
 
 elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
     GLOBAL_PATH_NAME = "jeju_island0.npy" #end is 125.2 start is 0.8 #start is 0.0 end is 26.5
-    mission_coord = {"crusing" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
+    mission_coord = {"Static_Obstacle" : [9999, 9999],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [999,9999],
                     "Tunnel" : [9999, 9999]}
 
@@ -91,6 +91,8 @@ class Mission_State():
         self.mission_zone = 0
         self.mission_ing = 0
         
+        self.Lane_done = False
+        
         self.max_dis = 10.0
         self.Tunnel_width = 1.4
         
@@ -120,7 +122,7 @@ class Mission_State():
             return False
         
     def is_Lane(self):
-        pass
+        return True
     
     def mission_loc(self, s):
         global mission_coord
@@ -131,8 +133,6 @@ class Mission_State():
             self.mission_zone = 4
         elif (distance(mission_coord["lane"], s)) and self.is_Lane():
             self.mission_zone = 3
-        elif (distance(mission_coord["crusing"], s)):
-            self.mission_zone = 0
         elif (distance(mission_coord["Static_Obstacle"], s)):
             self.mission_zone = 1
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
@@ -192,12 +192,12 @@ def main():
         print(erp.states)
         state = MS.mission_update(s)
 
-        if MS.mission_state == 0: # 크루징(디폴트) 모드 (장애물 회피 X)
+        if MS.mission_state == 0: # 크루징(디폴트) 모드
             print("떼굴떼굴---")
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = CRUISING_SPEED
         
-        elif MS.mission_state == 1: # 정적장애물 모드
+        elif MS.mission_state == 1: # 정적 장애물
             print("라봉아 피해!")
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.erp_speed, erp.erp_steer, erp.obs)
             speed = CRUISING_SPEED
@@ -213,7 +213,7 @@ def main():
             if Mission_dynamic_obstacle.done:
                 MS.mission_done()
                 
-        elif MS.mission_state == 3:
+        elif MS.mission_state == 3:  # 차선
             print("누끼 장인 두둥등장 !!  ༼'๑ ◕ ⊖ ◕ ๑༽ ")
             steer = MS.lane_steer
             speed = LANE_SPEED
