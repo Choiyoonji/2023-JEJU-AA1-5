@@ -13,22 +13,26 @@ class SteeringInTunnel:
     def __init__(self):
         self.laser_sub = rospy.Subscriber('/scan', LaserScan, self.scan_callback, queue_size=1)
         self.sub_scan = []
-        # self.wheel_base = 0.75  # 차축 간 거리 [m]
         self.width = 0.77  # 차 폭 [m]
+        # self.wheel_base = 0.75  # 차축 간 거리 [m]
         # self.length = 1.35  # 차 길이 [m]
         self.tunnel_width = 1.5  # 터널 폭 [m]
         self.max_dis = 10.0  # lidar 센서 최대 측정 범위 [m]
 
     def scan_callback(self, scan):
+<<<<<<< HEAD
         # self.sub_scan = list(scan.ranges[0:810+1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
         sub_scan = np.array(scan.ranges[0:810 + 1:3])
         self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)
+=======
+        sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
+        self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
+>>>>>>> c6151a46f15bacff46c376f41e1f90515b2dcaeb
 
     def get_steer(self):
-        # self.sub_scan[self.sub_scan == 'inf'] = self.max_dis  # 최대 측정 거리를 넘어가 값이 'inf' 로 들어올 때 max_dis 로 변환
         r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]  # 정면 0° 기준 좌우 60° ~ 80° 범위 거리 데이터
         r_avg, l_avg = np.sum(r_data) / len(r_data), np.sum(l_data) / len(l_data)  # 60° ~ 80° 범위의 거리 값들의 평균
-        steer = ((r_avg - l_avg) / (self.tunnel_width - self.width)) * 22 * 1.1  # -1 ~ 1 로 normalization 후 steer 로 변환, 1.1 은 가중치
+        steer = ((r_avg - l_avg) / (self.tunnel_width - self.width)) * 1.1 * 22  # (-1 ~ 1 로 정규화) * 1.1(가중치) * 22(steer)
         return np.clip(steer, -22, 22)
 
 
