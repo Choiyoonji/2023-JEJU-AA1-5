@@ -24,7 +24,7 @@ from sub_erp_state import sub_erp_state
 from geometry_msgs.msg import Vector3, Pose, Point
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan, NavSatFix, PointCloud, Imu
-from std_msgs.msg import Header, Float64, ColorRGBA
+from std_msgs.msg import Header, Float64, ColorRGBA, Bool
 
 WHERE = 5
 where = 1 # 1 DGU 2 kcity
@@ -42,19 +42,19 @@ snu_parking = 4
 #전역경로파일
 Tracking_path=[]
 if WHERE == 1:
-    Tracking_path="PG.npy" #대운동장 전체 경로
+    Tracking_path=["PG.npy"] #대운동장 전체 경로
 elif WHERE == 2:
-    Tracking_path="yaeseon_xy.npy"
+    Tracking_path=["yaeseon_xy.npy"]
 elif WHERE == 3:
-    Tracking_path="bonseon.npy"
+    Tracking_path=["bonseon.npy"]
 elif WHERE == 4:
-    Tracking_path="mh_lidar.npy" #만해 한 바퀴
+    Tracking_path=["mh_lidar.npy"]#만해 한 바퀴
 elif WHERE == 5:
-    Tracking_path="mh_0314.npy" 
+    Tracking_path=["mh_0314.npy"] 
 elif WHERE == 6:
     # Tracking_path="kcity_trial1.npy" #대운동장 직선만 
     # Tracking_path="PG.npy" #대운동장 전체 경로
-    Tracking_path="snu_del_path1.npy"
+    Tracking_path=["snu_del_path1.npy"]
 elif WHERE == 7:
     # Tracking_path="k_city_bonseon1.npy"
     # Tracking_path="kcity_trial2.npy"
@@ -67,9 +67,9 @@ elif WHERE == 7:
     # Tracking_path = "snu_camera_test_curve.npy" #차선보정용 직선 흔들 코스
     # Tracking_path = "snu_testmap1.npy"
     # Tracking_path = "track_map3.npy"
-    Tracking_path = "mh_green.npy"
+    Tracking_path = ["mh_green.npy"]
 elif WHERE == 8:
-    Tracking_path="kcity_uturn.npy"
+    Tracking_path=["kcity_uturn.npy"]
 elif WHERE == 9:
     for i in range(snu_parking):
         file_name="snu_add_parking%d.npy"%(i+1)
@@ -134,6 +134,7 @@ class Visualization():
         self.obs_pub = rospy.Publisher('obs', Marker, queue_size = 5)
         self.map_pub = rospy.Publisher('map', Marker, queue_size = 1)
 
+        self.reset_sub = rospy.Subscriber('/reset', Bool, self.reset_callback, queue_size = 1)
         self.cdpath_sub = rospy.Subscriber('/CDpath', PointCloud, self.CDpath_callback, queue_size = 1)
         self.slpath_sub = rospy.Subscriber('/SLpath', PointCloud, self.SLpath_callback, queue_size = 1)
         self.goalpoint_sub = rospy.Subscriber('/goal_point', Point, self.goalpoint_callback, queue_size = 1)
@@ -149,6 +150,9 @@ class Visualization():
         self.cd_path = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
         self.sl_path = [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
 
+    def reset_callback(self, data):
+        self.reset = data
+    
     def CDpath_callback(self, cd):
         self.cd_path = []
         for b in cd.points:
@@ -310,6 +314,10 @@ class Visualization():
     def present_LINE(self,ID,R,G,B,A,PATH_ARR,log=False): #선 # 사용 방법 : id, 색(r,g,b), 투명도(1이 최대) , path 아래 추가하고 사용할 path 번호, path_log 사용할 때만 true
         if log == True :
             self.past_path.append([self.erp.pose[0], self.erp.pose[1]])
+            
+        if self.reset == True :
+            self.reset = False
+            self.past_path = []
         
         rviz_msg_line=Marker(
             header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
@@ -405,29 +413,7 @@ class Visualization():
 
     def present_MAP(self,ID,R,G,B,A): #전역경로
         i=ID
-        if WHERE == 9:
-            for j in range(len(Tracking_path)):
-                rviz_msg_map=Marker(
-                header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
-                ns="track_Map",
-                id=i,
-                type=Marker.LINE_STRIP,
-                lifetime=rospy.Duration(),
-                action=Marker.ADD,
-                scale=Vector3(0.1,0.0,0.0),
-                color=ColorRGBA(r=R,g=G,b=B,a=A)
-                )
-                path_arr=np.load(file=PATH_ROOT+"path/"+Tracking_path[j])
-                s=range(len(path_arr))
-                for a in s:
-                    p=Point()
-                    p.x=float(path_arr[a,0])-self.offset[0]
-                    p.y=float(path_arr[a,1])-self.offset[1]
-                    p.z=0
-                    rviz_msg_map.points.append(p)
-                self.map_pub.publish(rviz_msg_map)
-                i+=1
-        else : 
+        for j in range(len(Tracking_path)):
             rviz_msg_map=Marker(
             header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
             ns="track_Map",
@@ -438,7 +424,7 @@ class Visualization():
             scale=Vector3(0.1,0.0,0.0),
             color=ColorRGBA(r=R,g=G,b=B,a=A)
             )
-            path_arr=np.load(file=PATH_ROOT+"path/"+Tracking_path)
+            path_arr=np.load(file=PATH_ROOT+"path/"+Tracking_path[j])
             s=range(len(path_arr))
             for a in s:
                 p=Point()
@@ -447,8 +433,9 @@ class Visualization():
                 p.z=0
                 rviz_msg_map.points.append(p)
             self.map_pub.publish(rviz_msg_map)
-
-        #오프셋(지도상 0,0점이 되는 좌표) 를 업데이트 해주는 메서드
+            i+=1
+        
+    #오프셋(지도상 0,0점이 되는 좌표) 를 업데이트 해주는 메서드
     def offset_update(self):
         self.offset=[self.erp.pose[0], self.erp.pose[1]]
 

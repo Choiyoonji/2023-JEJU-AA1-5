@@ -20,14 +20,8 @@ class SteeringInTunnel:
         self.max_dis = 10.0  # lidar 센서 최대 측정 범위 [m]
 
     def scan_callback(self, scan):
-<<<<<<< HEAD
-        # self.sub_scan = list(scan.ranges[0:810+1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
-        sub_scan = np.array(scan.ranges[0:810 + 1:3])
-        self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)
-=======
         sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
         self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
->>>>>>> c6151a46f15bacff46c376f41e1f90515b2dcaeb
 
     def get_steer(self):
         r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]  # 정면 0° 기준 좌우 60° ~ 80° 범위 거리 데이터

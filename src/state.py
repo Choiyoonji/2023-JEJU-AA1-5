@@ -12,6 +12,7 @@ import numpy as np
 
 # message 파일
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
 # from sensor_msgs import PointCloud
 
 # 모듈 import
@@ -21,66 +22,29 @@ from mission_cruising import mission_cruising
 # from mission_track import mission_track, path_planning
 
 WHERE = 1
-global kkk
-kkk = 122 #where2-> 122 #where3-> 133
 
 CRUISING_SPEED = 80
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
     GLOBAL_PATH_NAME = "mh_0314.npy" 
-    mission_coord = {"crusing" : [99990.0, 1299995.0], "Static_Obstacle" : [0.0,9930],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2],
-                    "Traffic_light_straight" : [[199948.9 - 9.0, 199948.9 + 4.0],
-                                                [149998.9 - 9.0, 199948.9 + 4.0]], # 148.9
-                    "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
+    mission_coord = {"crusing" : [0.0, 1299995.0], "Static_Obstacle" : [0.0,9930],
+                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [0.0,0.0]}
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
     mission_coord = {"crusing" : [0.0, 125.0], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
-                    "Traffic_light_straight" : [[9999, 9999],
-                                                [9999, 9999]], # 110.3, 248.6
-                    "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
+                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999]}
 
 elif WHERE == 3: # jeju track -> traffic available, cw-ccw
     GLOBAL_PATH_NAME = "jeju_island3.npy" # end is 133.2 start is 0.0
     mission_coord = {"crusing" : [0.0, 133.0], "Static_Obstacle" : [99999, 99999],
-                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
-                    "Traffic_light_straight" : [[178.2 - 15.0, 178.2 + 4.0],
-                                                [233.0 - 15.0, 233.0 + 4.0],
-                                                [366.5 - 15.0, 366.5 + 4.0],
-                                                [763.9 - 15.0, 763.9 + 4.0], # 10번 신호등
-                                                [901.6 - 15.0, 901.6 + 4.0],
-                                                [1246.5- 15.0, 1246.5 + 4.0],
-                                                [1380.5 - 15.0, 1380.5 + 4.0],
-                                                [1426.4 - 15.0, 1426.4 + 4.0]], # 141.2, 196.0, 328.8, 727.2, 865.4, 1211.4, 1344.4, 1390.4
-                    "Traffic_light_left" : [[1079.5 - 15.0, 1079.5 + 4.0],
-                                            [1079.5 - 15.0, 1079.5 + 4.0]]} # 엥 좌회전 한번이네 1043.2
+                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999]} # 엥 좌회전 한번이네 1043.2
 
 elif WHERE == 4: # jeju track -> traffic none, ccw-cw  ##now test jeju_island0
     GLOBAL_PATH_NAME = "jeju_island0.npy" #end is 125.2 start is 0.8 #start is 0.0 end is 26.5
     mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [999,9999],
-                    "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
-                                                [9106.8 - 15.0, 9106.8 + 4.0],],
-                    "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
-
-elif WHERE == 5: # 직선 테스트
-    GLOBAL_PATH_NAME = "MH_straight.npy" 
-    mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [9999, 9999], "lane" : [999,9999],
-                    "Traffic_light_straight" : [[360.5 - 15.0, 360.5 + 4.0],
-                                                [360.5 - 15.0, 360.5 + 4.0],],
-                    "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
-
-elif WHERE == 6: # 직선 테스트
-    GLOBAL_PATH_NAME = "DP_straight.npy" 
-    mission_coord = {"Parking" : [9999.2, 9999.2], "Static_Obstacle" : [9999, 9999],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [999,9999],
-                    "Traffic_light_straight" : [[9106.8 - 15.0, 9106.8 + 4.0],
-                                                [9106.8 - 15.0, 9106.8 + 4.0],],
-                    "Traffic_light_left" : [[9999, 9999],[9999, 9999]]}
+                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [999,9999]}
 
 
 def distance(mission_pose, s):
@@ -100,19 +64,26 @@ class publish_erp():
         self.erp.linear.x = speed
         self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
+        
+class publish_Visreset():
+    def __init__(self):
+        self.reset_pub = rospy.Publisher("/reset", Bool, queue_size=1)
+        self.reset = Bool()
+        
+    def pub_reset(self):
+        self.reset = True
+        self.reset_pub.publish
 
 class Mission_State():
     def __init__(self):
         self.mission_state = 0
         self.mission_zone = 0
-        self.mission_zone_trf = 0
         self.mission_ing = 0
-        self.mission_ing_trf = 0
     
     def mission_loc(self, s):
         global mission_coord
 
-        self.mission_zone = self.mission_zone_trf = 0
+        self.mission_zone = 0
 
         if (distance(mission_coord["crusing"], s)):
             self.mission_zone = 0
@@ -121,15 +92,8 @@ class Mission_State():
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
             self.mission_zone = 2
         elif (distance(mission_coord["lane"], s)):
-            self.mission_zone = 3
-            
-        for i in mission_coord["Traffic_light_straight"]:
-            if (distance(i, s)):
-                self.mission_zone_trf = 8
-            
-        for i in mission_coord["Traffic_light_left"]:
-            if (distance(i, s)):
-                self.mission_zone_trf = 9
+            self.mission_zone = 3  
+        # 터널 => self.mission_zone = 4
 
     def mission_update(self, s):
         self.mission_loc(s)
@@ -148,30 +112,16 @@ class Mission_State():
             elif self.mission_ing == 2:
                 self.mission_state = 0
 
-        if (self.mission_zone_trf == 8) or (self.mission_zone_trf == 9):
-            if self.mission_ing_trf == 0:
-                print("신호등 인식 시작")
-                self.mission_ing_trf = 1
-            elif self.mission_ing_trf == 1:
-                pass
-            elif self.mission_ing_trf == 2:
-                pass
-        else:
-            self.mission_ing_trf = 0
-
     def mission_done(self):
         print("미션 완료")
         self.mission_ing = 2
     
-    def mission_done_trf(self):
-        print("신호등 미션 완료")
-        self.mission_ing_trf = 2
-
 def main():
     global WHERE
     rate = rospy.Rate(10)
     speed, steer = 0.0, 0.0
 
+    vis_reset = publish_Visreset()
     pub = publish_erp()
     erp = sub_erp_state()
     MS = Mission_State()
@@ -187,6 +137,8 @@ def main():
 
     print("제주도 한라봉맛 마카롱")
     rospy.sleep(1)
+    
+    vis_reset.pub_reset()
 
     while not rospy.is_shutdown():
         print('====================================')
@@ -203,19 +155,12 @@ def main():
         
         elif (MS.mission_state == 1): # 정적장애물 모드
             print("라봉아 피해!")
-            
             steer = Mission_cruising.static_obstacle(erp.pose, erp.heading, erp.erp_speed, erp.erp_steer, erp.obs)
             speed = CRUISING_SPEED
-
-        # 속도를 줄이자 (임의 감속 구간)(안되면 걍 멈춰)
-        # if 529 < s < 552 or 1108 < s < 1162:
-        if kkk < s:
-            speed = 0
 
         # rospy.sleep(3)
         print("steer: %d speed: %d"%(steer, speed))
         pub.pub_erp(speed, steer)
-        # print(erp.trffic, 'traffic_info')
         rate.sleep()
 
 if __name__ == '__main__':
