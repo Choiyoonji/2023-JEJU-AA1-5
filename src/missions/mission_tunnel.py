@@ -21,6 +21,7 @@ class mission_tunnel:
 
         self.tunnel_flag = False
         self.step = 0
+        self.limit = 3.0
 
     def scan_callback(self, scan):
         sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
@@ -46,11 +47,13 @@ class mission_tunnel:
 
     def search_tunnel_entrance(self):
         scan_data = self.sub_scan[45:225 + 1]
-        change_rate_list = [abs(scan_data[i] - scan_data[i + 1]) for i in range(len(scan_data) - 1)]
+        change_rate_list = np.array([abs(scan_data[i] - scan_data[i + 1]) for i in range(len(scan_data) - 1)])
+        change_rate_list = np.where(change_rate_list >= self.limit, self.limit, change_rate_list)
         max_index, second_index = sorted(self.find_largest_second_largest(change_rate_list))
         center_angle = int(len(scan_data) * 0.5)
         first_angle, second_angle = max_index - center_angle, second_index - center_angle
         if first_angle >= 60 and second_angle <= -60:
+        # if scan_data[first_angle] <= self.tunnel_width or scan_data[second_angle] <= self.tunnel_width:
             self.tunnel_flag = True
         return np.clip(-(first_angle + second_angle) * 0.5, -22, 22)
 

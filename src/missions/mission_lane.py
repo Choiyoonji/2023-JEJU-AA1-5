@@ -13,15 +13,26 @@ import time
 import os
 
 from std_msgs.msg import Float64, Int16
+from geometry_msgs.msg import Twist
 
 class PublishToState:
     def __init__(self):
-        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=10)
-        self.steer = Int16()
+        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=5)
+        self.erp = Twist()
 
     def pub_erp(self, steer):
-        self.steer = steer
-        self.steer_pub.publish(self.steer)
+        self.erp.linear.x = 50
+        self.erp.angular.z = steer
+        self.erp_pub.publish(self.erp)
+        
+# class PublishToState:
+#     def __init__(self):
+#         self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=10)
+#         self.steer = Int16()
+
+#     def pub_erp(self, steer):
+#         self.steer = steer
+#         self.steer_pub.publish(self.steer)
         
 class lane_detection:
     def __init__(self):
@@ -318,8 +329,8 @@ class lane_detection:
     
     def run(self):    
         cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)  #해상도 조절해주기,웹캠사용시 필요
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
         # cap = os.getcwd() #현재 경로 헷갈릴때 확인하기(비디오 넣어서 확인할때만!)
         # print(cap)
         # cap = cv2.VideoCapture(os.getcwd() + "/catkin_ws/src/2023-JEJU-AA1-5-main/src/missions/track-s.mkv")
@@ -368,6 +379,7 @@ def main():
     pub = PublishToState()
     
     cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
+    # cap = cv2.resize(cap,{500,500})
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
     
@@ -392,14 +404,18 @@ def main():
             print("steer :", steer)
             cv2.imshow('edges', edges)
             cv2.imshow('copy', copy)
-
-            print("time :", time.time() - current, "s")
             
+            # print("time :", time.time() - current, "s")
+             
+            interval = time.time() - current
+            rospy.sleep(0.1-interval)
+             
             if cv2.waitKey(1) == ord('q'):
                 break
             
             steer = np.clip(steer, -22, 22)
             pub.pub_erp(steer)
+            
             
         cap.release()
         cv2.destroyAllWindows()

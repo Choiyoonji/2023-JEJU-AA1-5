@@ -27,16 +27,16 @@ from mission_tunnel import mission_tunnel
 
 WHERE = 1
 
-CRUISING_SPEED = 80
+CRUISING_SPEED = 40
 TUNNEL_SPEED = 50
-DYNAMIC_SPEED = 50
+DYNAMIC_SPEED = 40
 LANE_SPEED = 50
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "won_c_0426.npy" 
+    GLOBAL_PATH_NAME = "won_c_0419.npy" 
     mission_coord = {"Static_Obstacle" : [999990.0,9930],
-                    "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [0.0,0.0],
+                    "Dynamic_Obstacle" : [0.0, 99999.2], "lane" : [0.0,0.0],
                     "Tunnel" : [9999, 9999]}
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
@@ -68,7 +68,7 @@ def distance(mission_pose, s):
 
 class publish_erp():
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=30)
+        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=5)
         self.erp = Twist()
 
     def pub_erp(self, speed, steer):
@@ -138,7 +138,6 @@ class Mission_State():
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
             self.mission_zone = 2
             
-        self.mission_zone = 4
 
     def mission_update(self, s):
         self.mission_loc(s)
@@ -208,9 +207,12 @@ def main():
             print("고라니 악,,,,")
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
             speed = DYNAMIC_SPEED
-            if Mission_dynamic_obstacle.scan(erp.pose, erp.obs) == "stop":
+            # if Mission_dynamic_obstacle.scan(erp.pose, erp.obs) == "stop":
+            Mission_dynamic_obstacle.scan(erp.pose, erp.obs)
+            if Mission_dynamic_obstacle.stop:
                 speed = 0
                 MS.stop = True
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++고라니발견++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             
             if Mission_dynamic_obstacle.done:
                 MS.mission_done()

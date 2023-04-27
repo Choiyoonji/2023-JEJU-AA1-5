@@ -35,7 +35,7 @@ def find_ind(pose, path):
 # 파라미터
 car_w_offset = 2.8 / 2.0
 car_f_offset = 1.5
-stop_dis = 4.0
+stop_dis = 1.0
 restart_time = 10
 
 stop_dis = stop_dis + car_f_offset
@@ -52,22 +52,27 @@ class mission_dynamic_obstacle():
         self.done = False
         self.stop = False
         self.current_time = 0
-        self.done = False
 
     def scan(self, pose, obs): # 장애물 상황을 스캔하는 함수
         global car_w_offset, stop_dis, restart_time
-        for p in obs:
-            n = find_ind(p, self.mission_np) #원하는 P index  - - -  - - - mission  /  pose(erp) - - - mission
-            if (two_dis(p, self.mission_np[n]) < car_w_offset) and (two_dis(pose, self.mission_np[n]) < stop_dis):
-                self.state = "stop"
-                print(self.state)
-                return self.state
-
         if not self.stop:
+            for p in obs:
+                n = find_ind(p, self.mission_np) #원하는 P index  - - -  - - - mission  /  pose(erp) - - - mission
+                if (two_dis(p, self.mission_np[n]) < car_w_offset) and (two_dis(pose, self.mission_np[n]) < stop_dis):
+                    self.state = "stop"
+                    print(self.state)
+                    self.stop = True
+                    return self.state
+
+        if self.stop and self.current_time == 0:
             self.current_time = time.time()
-            self.stop = True
+
+        # if not self.stop:
+        #     self.current_time = time.time()
+        #     self.stop = True
 
         if self.stop and time.time() - self.current_time > restart_time:
+            self.stop = False
             self.done = True
             
         self.state = "go"
