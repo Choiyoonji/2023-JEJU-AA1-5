@@ -34,8 +34,8 @@ LANE_SPEED = 50
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "mh_0314.npy" 
-    mission_coord = {"Static_Obstacle" : [0.0,9930],
+    GLOBAL_PATH_NAME = "won_c_0426.npy" 
+    mission_coord = {"Static_Obstacle" : [999990.0,9930],
                     "Dynamic_Obstacle" : [99999.5, 99999.2], "lane" : [0.0,0.0],
                     "Tunnel" : [9999, 9999]}
 
@@ -129,7 +129,7 @@ class Mission_State():
 
         self.mission_zone = 0
         
-        if self.is_Tunnel():
+        if self.is_Tunnel() or True:
             self.mission_zone = 4
         elif (distance(mission_coord["lane"], s)) and self.is_Lane():
             self.mission_zone = 3
@@ -137,6 +137,8 @@ class Mission_State():
             self.mission_zone = 1
         elif (distance(mission_coord["Dynamic_Obstacle"], s)):
             self.mission_zone = 2
+            
+        self.mission_zone = 4
 
     def mission_update(self, s):
         self.mission_loc(s)
@@ -214,7 +216,7 @@ def main():
                 MS.mission_done()
                 
         elif MS.mission_state == 3:  # 차선
-            print("누끼 장인 두둥등장 !!  ༼'๑ ◕ ⊖ ◕ ๑༽ ")
+            print("누끼 장인 두둥등장 !!")
             steer = MS.lane_steer
             speed = LANE_SPEED
                 

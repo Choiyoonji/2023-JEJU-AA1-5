@@ -4,7 +4,7 @@ import numpy as np
 
 from math import cos, sin
 
-class Lidar:
+class lidar:
     def __init__(self):
         self.obs_xy = None
 

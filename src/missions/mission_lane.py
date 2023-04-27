@@ -21,7 +21,7 @@ class PublishToState:
 
     def pub_erp(self, steer):
         self.steer = steer
-        self.steer_pub(self.steer)
+        self.steer_pub.publish(self.steer)
         
 class lane_detection:
     def __init__(self):
@@ -317,7 +317,7 @@ class lane_detection:
         return 0.0
     
     def run(self):    
-        cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
+        cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
         cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         # cap = os.getcwd() #현재 경로 헷갈릴때 확인하기(비디오 넣어서 확인할때만!)
@@ -367,7 +367,7 @@ def main():
     Lane = lane_detection()
     pub = PublishToState()
     
-    cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
+    cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
     

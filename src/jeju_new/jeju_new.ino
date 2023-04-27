@@ -80,6 +80,7 @@ void setMode(const geometry_msgs::Twist& msg){
     else goBackward(30);
   }
   else{
+    brake(0);
     encoder();
   }
 }
@@ -134,7 +135,7 @@ void setCommand(const geometry_msgs::Twist& msg){
     }
     else if (v == -0.5){
       velocity_F = 0;
-      velocity_B = 50;
+      velocity_B = 60;
       goBackward(velocity_B);
     }
 
@@ -154,6 +155,7 @@ void setCommand(const geometry_msgs::Twist& msg){
     }
   }
   else{
+    brake(0);
     encoder();
   }
 }
