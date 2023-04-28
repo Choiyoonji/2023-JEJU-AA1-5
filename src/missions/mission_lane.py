@@ -229,10 +229,10 @@ class lane_detection:
                 RX = [640]
                 RY = [300]
             
-            avgLX = int(np.mean(LX, axis=0))
-            avgLY = int(np.mean(LY, axis=0))
-            avgRX = int(np.mean(RX, axis=0))
-            avgRY = int(np.mean(RY, axis=0))
+            # avgLX = int(np.mean(LX, axis=0))
+            # avgLY = int(np.mean(LY, axis=0))
+            # avgRX = int(np.mean(RX, axis=0))
+            # avgRY = int(np.mean(RY, axis=0))
             
             # if 450 < LY[0] < 640:
             for x, y in zip(LX, LY):
@@ -380,8 +380,8 @@ def main():
     
     cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
     # cap = cv2.resize(cap,{500,500})
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
     
     speed = 50
 
