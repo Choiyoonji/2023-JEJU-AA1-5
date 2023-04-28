@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 
 class erpreadTest:
     def __init__(self):
-        self.state_sub = rospy.Subscriber('/state_read', String, self.state_callback, queue_size=100)
+        self.state_sub = rospy.Subscriber('/state_read', String, self.state_callback, queue_size=1)
         self.speed_sub= rospy.Subscriber('/speed_read', Int16, self.speed_callback, queue_size=1)
         self.steer_sub= rospy.Subscriber('/steer_read', Int32, self.steer_callback, queue_size=1)
         self.state = ''

@@ -6,7 +6,7 @@
     <node name="rviz" pkg="rviz" type="rviz" 
     args="-d $(find jeju)/rviz/macaron5.rviz" />
 
-    <node name="visualization" pkg="jeju"  type="visualization.py"
+    <node name="visualization" pkg="jeju"  type="visual_jeju.py"
     output="screen"/>
 
     

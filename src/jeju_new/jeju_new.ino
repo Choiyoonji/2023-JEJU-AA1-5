@@ -4,14 +4,8 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Int32.h>
-#include <std_msgs/String.h>
 
 #include "math.h"
-#include <string.h>
-
-#define E "E-stop "
-#define M "Manual "
-#define A "Auto "
 
 //////////////////////////////
 const int RUN_PWM = 4; // move or stop
@@ -47,7 +41,6 @@ int encoder();
 
 ros::NodeHandle  nh;
 
-std_msgs::String read_state;
 std_msgs::Int16 read_speed;
 std_msgs::Int32 read_steer;
 
@@ -59,30 +52,24 @@ int currentSteer = 0;
 int currentGear = 0;
 
 void setMode(const geometry_msgs::Twist& msg){
-  if(!E_STOP&&AUTO){
-    float speed = msg.linear.x;
-    float steer = msg.angular.z;
-    int en = encoder()*4.4;
+  float speed = msg.linear.x;
+  float steer = msg.angular.z;
+  int en = encoder()*4.4;
 
-    digitalWrite(RUN_BRK, LOW);
+  digitalWrite(RUN_BRK, LOW);
 
-    if(steer > MAX_STEER) steer = MAX_STEER;
-    else if(steer < -MAX_STEER) steer = -MAX_STEER;
+  if(steer > MAX_STEER) steer = MAX_STEER;
+  else if(steer < -MAX_STEER) steer = -MAX_STEER;
 
-    if(en < steer) turnRight(steer);
-    else turnLeft(steer);
+  if(en < steer) turnRight(steer);
+  else turnLeft(steer);
 
-    if(speed > MAX_SPEED) speed = MAX_SPEED;
-    else if(speed < -MAX_SPEED) speed = -MAX_SPEED;
+  if(speed > MAX_SPEED) speed = MAX_SPEED;
+  else if(speed < -MAX_SPEED) speed = -MAX_SPEED;
 
-    if(speed == 0.0) brake(1);
-    else if(speed > 0) goForward(speed);
-    else goBackward(30);
-  }
-  else{
-    brake(0);
-    encoder();
-  }
+  if(speed == 0.0) brake(1);
+  else if(speed > 0) goForward(speed);
+  else goBackward(30);
 }
 
 void setCommand(const geometry_msgs::Twist& msg){
@@ -98,72 +85,43 @@ void setCommand(const geometry_msgs::Twist& msg){
 
   digitalWrite(RUN_BRK, LOW);
 
-  if (v > 10 && a > 10 && v < 100 && a < 100){
-    E_STOP = 1;
+  if (v == 0.5){
+    velocity_B = 0;
+    velocity_F += vel;
+    if (velocity_F > MAX_SPEED) velocity_F = MAX_SPEED;
+    goForward(velocity_F);
+  }
+  else if (v == 0){
     if (velocity_F + velocity_B) brake(1);
     else brake(0);
     velocity_F = 0;
     velocity_B = 0;
   }
-
-  if (v < 10 && a < 10){
-    E_STOP = 0;
+  else if (v == -0.5){
+    velocity_F = 0;
+    velocity_B = 60;
+    goBackward(velocity_B);
   }
 
-  if (v > 100 && a > 100){
-    MANUAL = 1;
-    AUTO = 0;
+  if (a == -1){
+    int angular = currentAngle + angle;
+    if (angular > MAX_STEER) angular = MAX_STEER;
+    turnRight(angular);
   }
-
-  if (v < -100 && a < -100){
-    MANUAL = 0;
-    AUTO = 1;
+  else if (a == 1){
+    int angular = currentAngle - angle;
+    if (angular < -MAX_STEER) angular = -MAX_STEER;
+    turnLeft(angular);
   }
-  
-  if(!E_STOP&&MANUAL){
-    if (v == 0.5){
-      velocity_B = 0;
-      velocity_F += vel;
-      if (velocity_F > MAX_SPEED) velocity_F = MAX_SPEED;
-      goForward(velocity_F);
-    }
-    else if (v == 0){
-      if (velocity_F + velocity_B) brake(1);
-      else brake(0);
-      velocity_F = 0;
-      velocity_B = 0;
-    }
-    else if (v == -0.5){
-      velocity_F = 0;
-      velocity_B = 60;
-      goBackward(velocity_B);
-    }
-
-    if (a == -1){
-      int angular = currentAngle + angle;
-      if (angular > MAX_STEER) angular = MAX_STEER;
-      turnRight(angular);
-    }
-    else if (a == 1){
-      int angular = currentAngle - angle;
-      if (angular < -MAX_STEER) angular = -MAX_STEER;
-      turnLeft(angular);
-    }
-    else {
-      if (currentAngle < 0) turnRight(0);
-      else turnLeft(0);
-    }
-  }
-  else{
-    brake(0);
-    encoder();
+  else {
+    if (currentAngle < 0) turnRight(0);
+    else turnLeft(0);
   }
 }
 
-ros::Publisher state_read("state_read",&read_state);
 ros::Publisher speed_read("speed_read",&read_speed);
 ros::Publisher steer_read("steer_read",&read_steer);
-ros::Subscriber<geometry_msgs::Twist> getCMD("cmd_vel", setCommand);
+ros::Subscriber<geometry_msgs::Twist> getCMD("cmd_write", setCommand);
 ros::Subscriber<geometry_msgs::Twist> erp_write("erp_write", setMode);
 
 void goForward(int intVelocity = velocity)
@@ -308,19 +266,10 @@ void loop() {
   // erpRead.read_gear = currentGear;
   // erpRead.read_steer = intSteer;
   // erpRead.read_speed = currentSpeed;
-  
-  char state[20] = "state: ";
-  
-  if (E_STOP) strcat(state, E);
-  if (MANUAL) strcat(state, M);
-  if (AUTO) strcat(state, A);
 
-
-  read_state.data = state;
   read_speed.data = currentSpeed;
   read_steer.data = intSteer;
 
-  state_read.publish(&read_state);
   speed_read.publish(&read_speed);
   steer_read.publish(&read_steer);
   
