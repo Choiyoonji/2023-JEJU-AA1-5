@@ -24,16 +24,9 @@ class mission_tunnel:
 
     def scan_callback(self, scan):
         sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
-        # self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
-        for i in range(len(sub_scan)):
-            if sub_scan[i] >= self.max_dis:
-                sub_scan[i] = self.max_dis
-            elif np.isinf(sub_scan[i]):
-                sub_scan[i] = self.max_dis
-            else:
-                pass
-        self.sub_scan = sub_scan
+        self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
         # print('65도 dis : ', sub_scan[65])
+
     # noinspection PyMethodMayBeStatic
     # def find_largest_second_largest(self, list_data):
     #     max_val, second_max_val = float('-inf'), float('-inf')
@@ -51,26 +44,18 @@ class mission_tunnel:
     #     return [max_index, second_max_index]
 
     def find_largest_second_largest(self, list_data):
-        r_index = 0
-        for i in range(len(list_data)):
-            if list_data[i] >= self.tunnel_width:
-                r_index = i
-        # r_index = np.argmax(list_data >= self.tunnel_width)
-        # if np.isnan(r_index):
-        #     r_index = 0
-        l_index = np.argmax(np.flip(list_data) >= self.tunnel_width)
-        if np.isnan(l_index):
+        r_index = np.argmax(list_data >= 0.1)
+        if not r_index:
+            r_index = 0
+        l_index = np.argmax(np.flip(list_data) >= 0.1)
+        if not l_index:
             l_index = 0
         print('r_index : {0} , l_index : {1}'.format(r_index, l_index))
         return r_index, 180 - l_index
 
     def search_tunnel_entrance(self):
-        # diff_list = np.abs(np.diff(self.sub_scan[45:225 + 1]))
-        diff_list = []
-        scan = self.sub_scan[45:225 + 1]
-        for i in range(len(scan) - 1):
-            diff_list.append(scan[i] - scan[i + 1])
-        r_angle, l_angle = self.find_largest_second_largest(np.array(diff_list))
+        diff_list = np.abs(np.diff(self.sub_scan[45:225 + 1]))
+        r_angle, l_angle = self.find_largest_second_largest(diff_list)
         goal_angle = 0.5 * (r_angle + l_angle)
         center_angle = int(len(diff_list) * 0.5)
         # first_angle, second_angle = r_index - center_angle, l_index - center_angle
@@ -91,8 +76,6 @@ class mission_tunnel:
             # print('#------------------------------------------------------------------------------- \
             #       터널 탈출 ------------------------------------------------------------------------')
         return np.clip(steer, -22, 22)
-
-
 
     def get_steer(self):
         if self.tunnel_flag is False:
