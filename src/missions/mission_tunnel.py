@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# noinspection PyUnresolvedReferences
 import rospy
-import time
 import numpy as np
-# noinspection PyUnresolvedReferences
+
 from sensor_msgs.msg import LaserScan
-# noinspection PyUnresolvedReferences
 from geometry_msgs.msg import Twist
 
 
@@ -18,33 +15,14 @@ class mission_tunnel:
         # self.length = 1.35  # 차 길이 [m]
         self.tunnel_width = 1.4  # 터널 폭 [m]
         self.max_dis = 2.0  # lidar 센서 최대 측정 범위 [m]
-
         self.tunnel_flag = False
-        self.range_flag = False
 
     def scan_callback(self, scan):
         sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
         sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
-        self.sub_scan = np.where(sub_scan <= 0.003, self.max_dis, sub_scan)
-        # print(self.sub_scan)
-        # print('65도 dis : ', self.sub_scan[65])
+        self.sub_scan = np.where(sub_scan <= 0.003, self.max_dis, sub_scan)  # 0.002 로 뜨는 noise -> max_dis
 
     # noinspection PyMethodMayBeStatic
-    # def find_largest_second_largest(self, list_data):
-    #     max_val, second_max_val = float('-inf'), float('-inf')
-    #     max_index, second_max_index = -1, -1
-    #
-    #     for i, val in enumerate(list_data):
-    #         if val > max_val:
-    #             second_max_val = max_val
-    #             second_max_index = max_index
-    #             max_val = val
-    #             max_index = i
-    #         elif val > second_max_val:
-    #             second_max_val = val
-    #             second_max_index = i
-    #     return [max_index, second_max_index]
-
     def find_largest_second_largest(self, list_data):
         r_index = np.argmax(list_data >= 0.1)
         l_index = np.argmax(np.flip(list_data) >= 0.1)
@@ -52,24 +30,15 @@ class mission_tunnel:
 
     def search_tunnel_entrance(self):
         diff_list = np.abs(np.diff(self.sub_scan[45:225 + 1]))
-        # if np.sum(diff_list) >= 0.1:
-        #     self.range_flag = True
-        # else:
-        #     self.range_flag = False
-        # print(diff_list)
         r_angle, l_angle = self.find_largest_second_largest(diff_list)
         goal_angle = 0.5 * (r_angle + l_angle)
-        center_angle = 90
-        # first_angle, second_angle = r_index - center_angle, l_index - center_angle
-        # if first_angle >= center_angle and second_angle <= -center_angle:
-        #     self.tunnel_flag = True
+        center = int(0.5 * len(diff_list))
         # print('r_index : {0} , l_index : {1}'.format(r_angle, l_angle))
-        
-        if 0 < r_angle <= 10 or 180 > l_angle >= 170:
+        if 0 < r_angle <= 10 or 170 <= l_angle < 180:
             self.tunnel_flag = True
             print('################################################################################ \
-                  터널 진입 ####################################################################')
-        return np.clip(center_angle - goal_angle, -22, 22)
+                  터널 진입 ########################################################################')
+        return np.clip(center - goal_angle, -22, 22)
 
     def get_steer_in_tunnel(self):
         r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]  # 정면 0° 기준 좌우 60° ~ 80° 범위 거리 데이터
