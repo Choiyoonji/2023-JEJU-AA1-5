@@ -375,7 +375,7 @@ class Visualization():
         for b in self.erp.obs:
             d = ((self.erp.pose[0] - b[0])**2 + (self.erp.pose[1] - b[1])**2)**0.5
             print(d)
-            if d <= 3 : #### 이것만 괜찮은 거리로 고치면 돼
+            if d <= 0 : #### 이것만 괜찮은 거리로 고치면 돼
                 rviz_msg_obs=Marker(
                     header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
                     ns="obs",

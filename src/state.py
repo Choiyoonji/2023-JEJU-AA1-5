@@ -76,14 +76,14 @@ class publish_erp():
         self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
         
-class publish_Visreset():
-    def __init__(self):
-        self.reset_pub = rospy.Publisher("/reset", Bool, queue_size=1)
-        self.reset = Bool()
+# class publish_Visreset():
+#     def __init__(self):
+#         self.reset_pub = rospy.Publisher("/reset", Bool, queue_size=1)
+#         self.reset = Bool()
         
-    def pub_reset(self):
-        self.reset = True
-        self.reset_pub.publish(self.reset)
+#     def pub_reset(self):
+#         self.reset = True
+#         self.reset_pub.publish(self.reset)
 
 class Mission_State():
     def __init__(self):
@@ -165,7 +165,7 @@ def main():
     rate = rospy.Rate(10)
     speed, steer = 0.0, 0.0
 
-    vis_reset = publish_Visreset()
+    # vis_reset = publish_Visreset()
     pub = publish_erp()
     erp = sub_erp_state()
     MS = Mission_State()
@@ -183,7 +183,7 @@ def main():
     print("제주도 한라봉맛 마카롱")
     rospy.sleep(1)
     
-    vis_reset.pub_reset()
+    # vis_reset.pub_reset()
 
     while not rospy.is_shutdown():
         print('====================================')
