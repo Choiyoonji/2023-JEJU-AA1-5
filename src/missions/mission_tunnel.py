@@ -17,15 +17,23 @@ class mission_tunnel:
         # self.wheel_base = 0.75  # 차축 간 거리 [m]
         # self.length = 1.35  # 차 길이 [m]
         self.tunnel_width = 1.4  # 터널 폭 [m]
-        self.max_dis = 5.0  # lidar 센서 최대 측정 범위 [m]
+        self.max_dis = 2.0  # lidar 센서 최대 측정 범위 [m]
 
         self.tunnel_flag = False
         self.step = 0
 
     def scan_callback(self, scan):
         sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
-        self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
-
+        # self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
+        for i in range(len(sub_scan)):
+            if sub_scan[i] >= self.max_dis:
+                sub_scan[i] = self.max_dis
+            elif np.isinf(sub_scan[i]):
+                sub_scan[i] = self.max_dis
+            else:
+                pass
+        self.sub_scan = sub_scan
+        # print('65도 dis : ', sub_scan[65])
     # noinspection PyMethodMayBeStatic
     # def find_largest_second_largest(self, list_data):
     #     max_val, second_max_val = float('-inf'), float('-inf')
@@ -43,21 +51,35 @@ class mission_tunnel:
     #     return [max_index, second_max_index]
 
     def find_largest_second_largest(self, list_data):
-        r_index = np.argmax(list_data >= self.tunnel_width)
+        r_index = 0
+        for i in range(len(list_data)):
+            if list_data[i] >= self.tunnel_width:
+                r_index = i
+        # r_index = np.argmax(list_data >= self.tunnel_width)
+        # if np.isnan(r_index):
+        #     r_index = 0
         l_index = np.argmax(np.flip(list_data) >= self.tunnel_width)
+        if np.isnan(l_index):
+            l_index = 0
+        print('r_index : {0} , l_index : {1}'.format(r_index, l_index))
         return r_index, 180 - l_index
 
     def search_tunnel_entrance(self):
-        diff_list = np.abs(np.diff(self.sub_scan[45:225 + 1]))
-        r_angle, l_angle = self.find_largest_second_largest(diff_list)
+        # diff_list = np.abs(np.diff(self.sub_scan[45:225 + 1]))
+        diff_list = []
+        scan = self.sub_scan[45:225 + 1]
+        for i in range(len(scan) - 1):
+            diff_list.append(scan[i] - scan[i + 1])
+        r_angle, l_angle = self.find_largest_second_largest(np.array(diff_list))
         goal_angle = 0.5 * (r_angle + l_angle)
-        center_angle = int(len(diff_list + 1) * 0.5)
-        center_angle - goal_angle
+        center_angle = int(len(diff_list) * 0.5)
         # first_angle, second_angle = r_index - center_angle, l_index - center_angle
         # if first_angle >= center_angle and second_angle <= -center_angle:
         #     self.tunnel_flag = True
-        if r_angle <= 10 or l_angle <= 10:
+        if r_angle <= 10 and l_angle >= 170:
             self.tunnel_flag = True
+            # print('################################################################################ \
+            #       터널 진입 ####################################################################')
         return np.clip(center_angle - goal_angle, -22, 22)
 
     def get_steer_in_tunnel(self):
@@ -66,7 +88,11 @@ class mission_tunnel:
         steer = ((r_avg - l_avg) / (self.tunnel_width - self.vehicle_width)) * 1.1 * 22  # (-1 ~ 1 로 정규화) * 22(steer)
         if r_avg >= self.tunnel_width and l_avg >= self.tunnel_width:
             self.tunnel_flag = False
+            # print('#------------------------------------------------------------------------------- \
+            #       터널 탈출 ------------------------------------------------------------------------')
         return np.clip(steer, -22, 22)
+
+
 
     def get_steer(self):
         if self.tunnel_flag is False:
