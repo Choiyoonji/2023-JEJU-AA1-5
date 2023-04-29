@@ -14,6 +14,7 @@ class publish_erp():
     def pub_erp(self, speed, steer):
         self.erp.linear.x = speed
         self.erp.angular.z = steer
+        print(speed, steer)
         self.erp_pub.publish(self.erp)
 
 class publish_cmd():
@@ -24,6 +25,7 @@ class publish_cmd():
     def pub_cmd(self, speed, steer):
         self.cmd.linear.x = speed
         self.cmd.angular.z = steer
+        print(speed, steer)
         self.cmd_pub.publish(self.cmd)
 
 class publish_state():
@@ -43,7 +45,7 @@ class publish_state():
 class Sub_Twists:
     def __init__(self):
         self.teleop_sub = rospy.Subscriber('/cmd_vel', Twist, self.teleop_callback, queue_size=1)
-        self.state_sub = rospy.Subscriber('/erp_write', Twist, self.state_callback, queue_size=1)
+        self.state_sub = rospy.Subscriber('/erp_writes', Twist, self.state_callback, queue_size=1)
         
         self.manual_speed = 0
         self.manual_steer = 0
@@ -60,14 +62,22 @@ class Sub_Twists:
         
         if self.manual_speed == 49.5 and self.manual_steer == 99:
             self.E_STOP = True
+            self.manual_speed = 0
+            self.manual_steer = 0
         elif self.manual_speed == -49.5 and self.manual_steer == -99:
             self.E_STOP = False
+            self.manual_speed = 0
+            self.manual_steer = 0
         elif self.manual_speed == 500 and self.manual_steer == 1000:
             self.AUTO = False
             self.MANUAL = True
+            self.manual_speed = 0
+            self.manual_steer = 0
         elif self.manual_speed == -500 and self.manual_steer == -1000:
             self.AUTO = True
             self.MANUAL = False
+            self.manual_speed = 0
+            self.manual_steer = 0
         
     def state_callback(self, data):
         self.auto_speed = data.linear.x
@@ -85,6 +95,7 @@ def main():
     while not rospy.is_shutdown():
         if sub.E_STOP:
             pub_cmd.pub_cmd(0,0)
+            print('0,0 ')
         elif sub.MANUAL:
             pub_cmd.pub_cmd(sub.manual_speed,sub.manual_steer)
         elif sub.AUTO:

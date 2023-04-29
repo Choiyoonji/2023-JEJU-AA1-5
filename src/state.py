@@ -24,6 +24,7 @@ from sub_erp_state import sub_erp_state
 from mission_cruising import mission_cruising
 from mission_dynamic_obstacle import mission_dynamic_obstacle
 from mission_tunnel import mission_tunnel
+from mission_lane_total import mission_lane_total
 
 WHERE = 1
 
@@ -75,16 +76,6 @@ class publish_erp():
         self.erp.linear.x = speed
         self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
-        
-# class publish_Visreset():
-#     def __init__(self):
-#         self.reset_pub = rospy.Publisher("/reset", Bool, queue_size=1)
-#         self.reset = Bool()
-        
-#     def pub_reset(self):
-#         self.reset = True
-#         self.reset_pub.publish(self.reset)
-
 class Mission_State():
     def __init__(self):
         self.mission_state = 0
@@ -179,6 +170,7 @@ def main():
     Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
     Mission_dynamic_obstacle = mission_dynamic_obstacle(GLOBAL_PATH_NAME)
     Mission_tunnel = mission_tunnel()
+    Mission_lane = mission_lane_total()
     
     print("제주도 한라봉맛 마카롱")
     rospy.sleep(1)

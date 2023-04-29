@@ -114,8 +114,17 @@ void setCommand(const geometry_msgs::Twist& msg){
     turnLeft(angular);
   }
   else {
-    if (currentAngle < 0) turnRight(0);
-    else turnLeft(0);
+    if ((v == 0)&&(velocity_F + velocity_B)){
+      if (currentAngle < 0) turnRight(0);
+      else turnLeft(0);  
+    }
+    else if ((v == 0)&&(velocity_F + velocity_B == 0)){
+      brake(0);
+    }
+    else{
+      if (currentAngle < 0) turnRight(0);
+      else turnLeft(0);
+    }
   }
 }
 
@@ -235,7 +244,6 @@ void setup() {
   nh.subscribe(getCMD);
   nh.subscribe(erp_write);
 
-  nh.advertise(state_read);
   nh.advertise(speed_read);
   nh.advertise(steer_read);
 

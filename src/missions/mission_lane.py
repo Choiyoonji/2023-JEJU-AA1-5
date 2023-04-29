@@ -17,11 +17,13 @@ from geometry_msgs.msg import Twist
 
 class PublishToState:
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=5)
+        self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=5)
         self.erp = Twist()
 
     def pub_erp(self, steer):
-        self.erp.linear.x = 50
+        speed = 50 * (1-abs(steer)/22)
+        np.clip(speed, 30, 50)
+        self.erp.linear.x = speed
         self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
         
@@ -380,10 +382,11 @@ def main():
     
     cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
     # cap = cv2.resize(cap,{500,500})
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
     
-    speed = 50
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)  #해상도 조절해주기,웹캠사용시 필요
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
 
     while not rospy.is_shutdown():
         while cap.isOpened():
@@ -413,7 +416,7 @@ def main():
             if cv2.waitKey(1) == ord('q'):
                 break
             
-            steer = np.clip(steer, -22, 22)
+            steer = np.clip(steer*1.2, -22, 22)
             pub.pub_erp(steer)
             
             
