@@ -38,7 +38,7 @@ if WHERE == 1: # 동국대 직선
     GLOBAL_PATH_NAME = "mhgp_0501.npy" 
     mission_coord = {"Static_Obstacle" : [999990.0,9930],
                     "Dynamic_Obstacle" : [0.0, 99999.2], "lane" : [0.0,0.0],
-                    "Tunnel" : [95.0, 110]}
+                    "Tunnel" : [92.0, 110]}
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
@@ -101,7 +101,7 @@ class Mission_State():
             
         self.mission_state = self.mission_zone
         
-        if self.static_cnt > 50:
+        if self.static_cnt > 200:
             self.static_cnt = 0
             self.avoid = 0
             return self.avoid

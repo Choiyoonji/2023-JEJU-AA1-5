@@ -40,8 +40,8 @@ class DWA:
 
         # cost function 에서 사용 되는 가중치
         self.w1 = 1  # global path 와의 이격
-        self.w2 = 3  # obs 와의 거리
-        self.w3 = 1  # global path 와의 heading 차이
+        self.w2 = 2  # obs 와의 거리
+        self.w3 = 0  # global path 와의 heading 차이
 
     # ↓↓ 비주얼 코드 ↓↓
     def visual_candidate_paths(self, candidate_paths):
@@ -103,14 +103,14 @@ class DWA:
         return dw
 
     def DWA(self, x, y, heading, speed, steer, obs_xy=None):
-        speed = 2.0
+        speed = 1.5
         if len(obs_xy) == 0:
             obs_xy = [[0.0, 0.0]]
         self.current_s, self.current_q = self.glob_path.xy2sl(x, y)
 
         def cost_function(pos):
             gp_separation = abs(self.glob_path.xy2sl(pos[0], pos[1])[1])
-            cost1 = gp_separation / 3 if gp_separation <= 3 else gp_separation * 10
+            cost1 = gp_separation / 1.5 if gp_separation <= 1.5 else gp_separation * 10
             obs_d = min([sqrt((pos[0] - obstacle[0]) ** 2 + (pos[1] - obstacle[1]) ** 2) for obstacle in obs_xy])
             cost2 = (self.obstacle_force - obs_d) / self.obstacle_force if obs_d < self.obstacle_force else 0
             heading_difference = abs(self.glob_path.get_current_reference_yaw() - heading)

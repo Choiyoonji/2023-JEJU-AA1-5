@@ -529,7 +529,7 @@ def main():
                 if WHERE == 2 or WHERE == 3: 
                     Vis.point()
                 Vis.present_MAP(102,0.0,1.0,0.0,0.7) #전역경로
-                Vis.present_OBS(Marker.CYLINDER,0.2,0.2,0.2,0.2,0.2,0.2,1.0,0.5) #미션 시작과 끝
+                # Vis.present_OBS(Marker.CYLINDER,0.2,0.2,0.2,0.2,0.2,0.2,1.0,0.5) #미션 시작과 끝
                 count = 0
 
             # Vis.present_LINE(101,1.0,0.0,0.0,1.0,2,True) #pathLOG #내가 지나온 길을 pub해주는 메서드
