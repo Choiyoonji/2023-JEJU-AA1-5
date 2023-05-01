@@ -28,8 +28,8 @@
 - [x] 정적 장애물 - DWA 알고리즘
 
 **tracking**
-- [ ] pure pursuit LD
-- [ ] PID 파라미터 조정
+- [x] pure pursuit LD
+- [x] PID 파라미터 조정
 
 **vision**
 - [x] 차선 인식 및 검출 -> 차선 테스트
@@ -41,4 +41,4 @@
 - [x] 차선 딥러닝 후 정확도 테스트 ->사용 X
 
 **Arduino**
-- [ ] erp_write 토픽 들어올 때 manual 오류 수정
+- [x] erp_write 토픽 들어올 때 manual 오류 수정
