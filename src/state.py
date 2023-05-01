@@ -28,17 +28,17 @@ from mission_lane_total import mission_lane_total
 
 WHERE = 1
 
-CRUISING_SPEED = 40
+CRUISING_SPEED = 80
 TUNNEL_SPEED = 50
-DYNAMIC_SPEED = 40
+DYNAMIC_SPEED = 80
 LANE_SPEED = 50
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "won_c_0419.npy" 
+    GLOBAL_PATH_NAME = "mhgp_0501.npy" 
     mission_coord = {"Static_Obstacle" : [999990.0,9930],
                     "Dynamic_Obstacle" : [0.0, 99999.2], "lane" : [0.0,0.0],
-                    "Tunnel" : [9999, 9999]}
+                    "Tunnel" : [95.0, 110]}
 
 elif WHERE == 2: # jeju track -> traffic none, ccw-cw
     GLOBAL_PATH_NAME = "jeju_island1.npy" #end is 125.2 start is 0.8
@@ -69,17 +69,19 @@ def distance(mission_pose, s):
 
 class publish_erp():
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=5)
+        self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=1)
         self.erp = Twist()
 
     def pub_erp(self, speed, steer):
         self.erp.linear.x = speed
         self.erp.angular.z = steer
         self.erp_pub.publish(self.erp)
+        
 class Mission_State():
     def __init__(self):
         self.mission_state = 0
         self.mission_zone = 0
+        self.static_cnt = 0
         
         self.avoid = False
 
@@ -93,10 +95,18 @@ class Mission_State():
         else:
             if self.avoid:
                 self.mission_zone = 1
+                self.static_cnt += 1
             else:
                 self.mission_zone = 2
             
         self.mission_state = self.mission_zone
+        
+        if self.static_cnt > 50:
+            self.static_cnt = 0
+            self.avoid = 0
+            return self.avoid
+        else:
+            return True
 
 def main():
     global WHERE
@@ -116,8 +126,7 @@ def main():
     # 미션 선언
     Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
     Mission_dynamic_obstacle = mission_dynamic_obstacle(GLOBAL_PATH_NAME)
-    Mission_tunnel = mission_tunnel()
-    Mission_lane = mission_lane_total()
+    Mission_tunnel = mission_tunnel(GLOBAL_PATH_NAME)
     
     print("제주도 한라봉맛 마카롱")
     rospy.sleep(1)
@@ -131,7 +140,10 @@ def main():
         print('current q', q)
         print(erp.states)
         state = MS.mission_update(s)
-
+        
+        if not state:
+            Mission_dynamic_obstacle.avoid = MS.avoid
+            
         if MS.mission_state == 0: # 크루징(디폴트) 모드
             print("떼굴떼굴---")
             steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
@@ -153,14 +165,16 @@ def main():
                 speed = 0
                 MS.stop = True
                 print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++고라니발견++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-            
-            if Mission_dynamic_obstacle.done:
-                MS.mission_done()
                 
         elif MS.mission_state == 3:  # 터널
             print("길을 잃었다... 자랑이다~!!")
-            steer = Mission_tunnel.get_steer()
-            speed = TUNNEL_SPEED
+            if not Mission_tunnel.tunnel_flag:
+                Mission_tunnel.search_tunnel_entrance()
+                steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
+            else:
+                steer = Mission_tunnel.get_steer()
+            
+            speed = TUNNEL_SPEED   
                 
         # rospy.sleep(3)
         print("steer: %d speed: %d"%(steer, speed))

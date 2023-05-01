@@ -67,7 +67,7 @@ elif WHERE == 7:
     # Tracking_path = "snu_camera_test_curve.npy" #차선보정용 직선 흔들 코스
     # Tracking_path = "snu_testmap1.npy"
     # Tracking_path = "track_map3.npy"
-    Tracking_path = "won_c_0419.npy"
+    Tracking_path = "mhgp_0501.npy"
     # Tracking_path = "won230111.npy"
 elif WHERE == 8:
     Tracking_path="kcity_uturn.npy"
