@@ -211,9 +211,9 @@ def main():
                 
         elif MS.mission_state == 3:  # 차선
             print("누끼 장인 두둥등장 !!")
-            steer = MS.lane_steer
-            speed = LANE_SPEED
-                
+            steer = Mission_lane.get_steer(erp.pose, erp.heading, erp.erp_speed, erp.erp_steer, erp.obs)
+            speed = LANE_SPEED if not Mission_lane.stop else 0
+
         elif MS.mission_state == 4:  # 터널
             print("길을 잃었다... 자랑이다~!!")
             steer = Mission_tunnel.get_steer()
