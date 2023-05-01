@@ -72,6 +72,6 @@ class mission_lane_total:
         if not self.stop and self.avoid:
             return self.dwa_PP.gps_tracking(self.pose, self.heading, self.speed, self.steer, self.obs)
         elif not self.stop and not self.avoid:
-            return 0  # 여기에 lane detection steer 리턴
+            return self.lane_steer  # 여기에 lane detection steer 리턴
         else:
             pass
