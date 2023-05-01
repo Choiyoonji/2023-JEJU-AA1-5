@@ -44,7 +44,7 @@ class mission_lane_total:
         self.sub_scan = np.where(sub_scan <= 0.003, self.max_dis, sub_scan)  # 0.002 로 뜨는 noise -> max_dis
 
     def scan_ROI(self):
-        center = int(len(self.sub_scan) * 0.5)
+        center = int(len(self.sub_scan) * 0.5) - self.steer
         search_data = np.array(self.sub_scan[center - self.search_range:center + self.search_range + 1])
         self.exist_obs = np.where(search_data < self.max_dis, True, False)
 
@@ -64,7 +64,7 @@ class mission_lane_total:
             if any(self.exist_obs):
                 self.last_time_avoid = time.time()
             else:
-                if self.last_time_avoid - time.time() > 5:
+                if self.last_time_avoid - time.time() > 10:
                     self.avoid = False
 
     def get_steer(self):
