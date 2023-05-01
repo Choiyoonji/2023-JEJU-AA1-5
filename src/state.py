@@ -112,17 +112,17 @@ class Mission_State():
         else:
             return False
         
-    def is_Lane(self):
-        return True
+    def is_Lane(self, q):
+        return q > 3
     
-    def mission_loc(self, s):
+    def mission_loc(self, s, q):
         global mission_coord
 
         self.mission_zone = 0
         
-        if self.is_Tunnel() or True:
+        if (distance(mission_coord["Tunnel"], s)):
             self.mission_zone = 4
-        elif (distance(mission_coord["lane"], s)) and self.is_Lane():
+        elif (distance(mission_coord["lane"], s)) and self.is_Lane(q):
             self.mission_zone = 3
         elif (distance(mission_coord["Static_Obstacle"], s)):
             self.mission_zone = 1
@@ -130,8 +130,8 @@ class Mission_State():
             self.mission_zone = 2
             
 
-    def mission_update(self, s):
-        self.mission_loc(s)
+    def mission_update(self, s, q):
+        self.mission_loc(s, q)
 
         if (self.mission_zone == 0): #mission_zone if not in mission zone -> cruising!
             self.mission_state = self.mission_zone

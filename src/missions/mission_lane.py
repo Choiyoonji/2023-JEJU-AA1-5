@@ -17,7 +17,7 @@ from geometry_msgs.msg import Twist
 
 class PublishToState:
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=5)
+        self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=1)
         self.erp = Twist()
 
     def pub_erp(self, steer):
