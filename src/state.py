@@ -80,77 +80,24 @@ class Mission_State():
     def __init__(self):
         self.mission_state = 0
         self.mission_zone = 0
-        self.mission_ing = 0
         
-        self.Lane_done = False
-        
-        self.max_dis = 10.0
-        self.Tunnel_width = 1.4
-        
-        self.laser_sub = rospy.Subscriber('/scan', LaserScan, self.scan_callback, queue_size=1)
-        self.sub_scan = []
-        
-        self.steer_sub = rospy.Subscriber("lane_steer", Int16, self.lane_callback, queue_size=10)
-        self.lane_steer = 0.0
-        
-    def scan_callback(self, scan):
-        sub_scan = np.array(scan.ranges[0:810 + 1:3]) 
-        self.sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)
-        
-    def lane_callback(self, data):
-        self.lane_steer = data
-    
-    def is_Tunnel(self):
-        r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]
-        if len(r_data) > 0 and len(l_data) > 0:
-            r_avg, l_avg = np.sum(r_data) / len(r_data), np.sum(l_data) / len(l_data) 
-        else:
-            r_avg = 999999
-            l_avg = 999999
-        if r_avg + l_avg < self.Tunnel_width:
-            return True
-        else:
-            return False
-        
-    def is_Lane(self, q):
-        return q > 3
-    
-    def mission_loc(self, s, q):
+        self.avoid = False
+
+    def mission_update(self, s):
         global mission_coord
 
         self.mission_zone = 0
-        
+
         if (distance(mission_coord["Tunnel"], s)):
-            self.mission_zone = 4
-        elif (distance(mission_coord["lane"], s)) and self.is_Lane(q):
             self.mission_zone = 3
-        elif (distance(mission_coord["Static_Obstacle"], s)):
-            self.mission_zone = 1
-        elif (distance(mission_coord["Dynamic_Obstacle"], s)):
-            self.mission_zone = 2
+        else:
+            if self.avoid:
+                self.mission_zone = 1
+            else:
+                self.mission_zone = 2
             
+        self.mission_state = self.mission_zone
 
-    def mission_update(self, s, q):
-        self.mission_loc(s, q)
-
-        if (self.mission_zone == 0): #mission_zone if not in mission zone -> cruising!
-            self.mission_state = self.mission_zone
-            self.mission_ing = 0
-
-        else: # 미션존 안에 있는 경우
-            if self.mission_ing == 0:
-                print("미션 시작")
-                self.mission_state = self.mission_zone
-                self.mission_ing = 1
-            elif self.mission_ing == 1:
-                self.mission_state = self.mission_zone
-            elif self.mission_ing == 2:
-                self.mission_state = 0
-
-    def mission_done(self):
-        print("미션 완료")
-        self.mission_ing = 2
-    
 def main():
     global WHERE
     rate = rospy.Rate(10)
@@ -201,6 +148,7 @@ def main():
             speed = DYNAMIC_SPEED
             # if Mission_dynamic_obstacle.scan(erp.pose, erp.obs) == "stop":
             Mission_dynamic_obstacle.scan(erp.pose, erp.obs)
+            MS.avoid = Mission_dynamic_obstacle.avoid
             if Mission_dynamic_obstacle.stop:
                 speed = 0
                 MS.stop = True
@@ -209,12 +157,7 @@ def main():
             if Mission_dynamic_obstacle.done:
                 MS.mission_done()
                 
-        elif MS.mission_state == 3:  # 차선
-            print("누끼 장인 두둥등장 !!")
-            steer = Mission_lane.get_steer(erp.pose, erp.heading, erp.erp_speed, erp.erp_steer, erp.obs)
-            speed = LANE_SPEED if not Mission_lane.stop else 0
-
-        elif MS.mission_state == 4:  # 터널
+        elif MS.mission_state == 3:  # 터널
             print("길을 잃었다... 자랑이다~!!")
             steer = Mission_tunnel.get_steer()
             speed = TUNNEL_SPEED
