@@ -6,6 +6,6 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "/
 arr = np.loadtxt("1_5__Waypoint.txt")
 # print(arr)
 a = arr[::,1:3]
-b = np.transpose(a)
-print(b)
-np.save("jeju_island_gp.npy",a)
+b = np.flipud(a)
+
+np.save("jeju_island_gp_ccw.npy",b)
