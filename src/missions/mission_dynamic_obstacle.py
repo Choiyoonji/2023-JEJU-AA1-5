@@ -34,7 +34,7 @@ def find_ind(pose, path):
 
 # 파라미터
 car_w_offset = 2.8 / 2.0
-car_f_offset = 1.5
+car_f_offset = 0.7
 stop_dis = 3.0
 restart_time = 10
 
@@ -69,7 +69,6 @@ class mission_dynamic_obstacle():
         if not self.stop:
             if self.is_obs(pose, obs):
                     self.state = "stop"
-                    # print("11111111111111111")
                     print(self.state)
                     self.stop = True
                     return self.state

@@ -35,7 +35,7 @@ LANE_SPEED = 50
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
-    GLOBAL_PATH_NAME = "mhgp_0501.npy" 
+    GLOBAL_PATH_NAME = "jeju_island_gp.npy" 
     mission_coord = {"Static_Obstacle" : [999990.0,9930],
                     "Dynamic_Obstacle" : [0.0, 99999.2], "lane" : [0.0,0.0],
                     "Tunnel" : [92.0, 110]}
@@ -139,7 +139,7 @@ def main():
         print('current s', s)
         print('current q', q)
         print(erp.states)
-        state = MS.mission_update(s, Mission_dynamic_obstacle.is_obs())
+        state = MS.mission_update(s, Mission_dynamic_obstacle.is_obs(s, erp.obs))
         
         if not state:
             Mission_dynamic_obstacle.avoid = MS.avoid

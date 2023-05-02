@@ -26,8 +26,8 @@ from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan, NavSatFix, PointCloud
 from std_msgs.msg import Header, Float64, ColorRGBA
 
-WHERE = 7
-where = 1 # 1 DGU 2 kcity 3 서울대 시흥캠퍼스
+WHERE = 2
+where = 1 # 1 DGU 2 kcity 3 서울대 시흥캠퍼스 4 제주도
 
 #지도 정보 경로 설정
 PATH_ROOT=(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/" #/home/gigi/catkin_ws/src/macaron_3/
@@ -44,9 +44,9 @@ Tracking_path=[]
 if WHERE == 1:
     Tracking_path="PG.npy" #대운동장 전체 경로
 elif WHERE == 2:
-    Tracking_path="yaeseon_xy.npy"
+    Tracking_path="jeju_island_gp.npy"
 elif WHERE == 3:
-    Tracking_path="bonseon.npy"
+    Tracking_path="jeju_island_gp_ccw.npy"
 elif WHERE == 4:
     Tracking_path="mh_lidar.npy" #만해 한 바퀴
 elif WHERE == 5:
@@ -144,6 +144,7 @@ class Visualization():
         if where == 1: self.offset = [955926.9659, 1950891.243]
         elif where == 2 : self.offset = [935482.4315, 1915791.089]
         elif where == 3 :self.offset = [931326.1071073, 1929913.8061744] 
+        elif where == 4: self.offset = [260065.2578, 3681161.771]
         self.obs = []
         self.past_path = []
         self.track_gb_path = [[0.0, 0.0], [0.0, 0.0]]
@@ -375,7 +376,7 @@ class Visualization():
         for b in self.erp.obs:
             d = ((self.erp.pose[0] - b[0])**2 + (self.erp.pose[1] - b[1])**2)**0.5
             print(d)
-            if d <= 0 : #### 이것만 괜찮은 거리로 고치면 돼
+            if d <= 10 : #### 이것만 괜찮은 거리로 고치면 돼
                 rviz_msg_obs=Marker(
                     header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
                     ns="obs",
@@ -457,58 +458,6 @@ class Visualization():
         # elif where == 2 :  self.offset = [935482.4315,	1915791.089]
         # elif where == 3 :self.offset = [931326.1071073, 1929913.8061744] 
 
-    def point(self): #목표점
-        if WHERE == 2:
-            coord = [[935530.0205, 1915841.744], [935552.5993, 1915884.1017], #사선주차
-            [935569.5335, 1915915.8702], [935579.3531, 1915948.3609], #교차로 좌회전
-            [935575.4682, 1915950.9969], [935544.9304, 1915967.0497], #정적 장애물
-            [935531.2802, 1915959.0985], [935547.7123, 1915905.4404]] #돌발 장애물/일시정지]
-
-        elif WHERE == 3 :
-            coord = [[935563.1816, 1915903.6754], #신호등1
-        [935586.7164, 1915947.7902],
-        [935588.4816, 1915951.0988], #신호등2
-        [935610.7220, 1915992.7872],
-        [935629.6625, 1916028.4897], #정적
-        [935647.9035, 1916077.135],
-        [935648.511, 1916079.217], #신호등3
-        [935654.2777, 1916122.8066],
-        [935655.1859, 1916134.1344], #배달
-        [935656.2859, 1916175.065],
-        [935652.9231, 1916186.9488], #신호등4
-        [935643.5607, 1916237.4644],
-        [935625.9914, 1916241.2965], #유턴
-        [935620.1601, 1916230.0689],
-        [935622.9095, 1916230.1263], #횡단보도9
-        [935630.4078, 1916230.2828], 
-        [935640.0328, 1916222.3563], #횡단보도11
-        [935641.2920, 1916211.0805], 
-        [935641.2664, 1916212.5803], #배달
-        [935642.4603, 1916142.5905],
-        [935642.5968, 1916134.5916], #신호등5
-        [935642.7898, 1916111.0950],
-        [935614.2834, 1916014.3736], #신호등6
-        [935598.8626, 1915980.8478],
-        [935591.7988, 1915967.6151], #신호등7
-        [935575.3055, 1915936.7449],
-        [935550.4452, 1915890.22], #평행주차
-        [935516.5127, 1915826.7178]]
-
-        for i in range(len(coord)):    
-            rviz_msg_point=Marker(
-                header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
-                ns="point",
-                id = 302+i,
-                type=Marker.CYLINDER,
-                lifetime=rospy.Duration(0.5),
-                action=Marker.ADD,
-                scale=Vector3(x=0.7,y=0.7,z=1.0),
-                color=ColorRGBA(r=1.0,g=0.0,b=0.0,a=1.0),
-                pose=Pose(position=Point(x = coord[i][0]-self.offset[0], y = coord[i][1]-self.offset[1], z = 0.5)
-                )
-            )
-            self.point_pub.publish(rviz_msg_point)
-            i=i+1
 
 def main():
     rospy.init_node('visualization',anonymous=True)
@@ -524,10 +473,7 @@ def main():
         while not rospy.is_shutdown():
             if count == 1:
                 Vis.offset_update()
-                if where != 3 :
-                    Vis.global_path()# 지도
-                if WHERE == 2 or WHERE == 3: 
-                    Vis.point()
+
                 Vis.present_MAP(102,0.0,1.0,0.0,0.7) #전역경로
                 # Vis.present_OBS(Marker.CYLINDER,0.2,0.2,0.2,0.2,0.2,0.2,1.0,0.5) #미션 시작과 끝
                 count = 0

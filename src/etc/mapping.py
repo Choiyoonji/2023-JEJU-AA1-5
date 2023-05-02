@@ -20,17 +20,17 @@ from sensor_msgs.msg import NavSatFix
 
 ######################################################################
 ######################################################################
-GLOBAL_NPY = "mhgp_0501"     # 알아서 npy_file/path 에 저장됨
+GLOBAL_NPY = "jeju_lane"     # 알아서 npy_file/path 에 저장됨
 DOT_DISTANCE = 0.5                      # 점과 점 사이 거리 0.5m
 ######################################################################
 ######################################################################
 
-proj_UTMK = Proj(init='epsg:5179')
+proj_UTM52N = Proj(init='EPSG:32652')
 proj_WGS84 = Proj(init='epsg:4326')
 
 index = 0
 waypoint = np.empty((1,2))
-dt=0.1
+dt = 0.1
 
 flag = 0
 
@@ -42,7 +42,7 @@ class position:
     def tm(self,Fix):
         lon = Fix.longitude
         lat = Fix.latitude
-        x, y = transform(proj_WGS84, proj_UTMK, lon, lat)
+        x, y = transform(proj_WGS84, proj_UTM52N, lon, lat)
         self.pos = [x,y]
 
 class Draw_map():

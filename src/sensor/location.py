@@ -15,7 +15,7 @@ class only_gps:
     def __init__(self):
         #Projection definition
         #UTM-K
-        self.proj_UTMK = Proj(init='epsg:5179')
+        self.proj_UTM52N = Proj(init='EPSG:32652')
         #WGS1984
         self.proj_WGS84 = Proj(init='epsg:4326')
         self.last_x = 0
@@ -23,7 +23,7 @@ class only_gps:
         self.last_heading = 0
         
     def tf_to_tm(self,lon,lat):
-        x,y=transform(self.proj_WGS84,self.proj_UTMK,lon,lat)
+        x,y=transform(self.proj_WGS84,self.proj_UTM52N,lon,lat)
         return x,y
 
     def tf_heading_to_rad(self, head):
