@@ -15,26 +15,25 @@ import os
 from std_msgs.msg import Float64, Int16
 from geometry_msgs.msg import Twist
 
-class PublishToState:
-    def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=1)
-        self.erp = Twist()
-
-    def pub_erp(self, steer):
-        speed = 50 * (1-abs(steer)/22)
-        np.clip(speed, 30, 50)
-        self.erp.linear.x = speed
-        self.erp.angular.z = steer
-        self.erp_pub.publish(self.erp)
-        
 # class PublishToState:
 #     def __init__(self):
-#         self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=10)
-#         self.steer = Int16()
+#         self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=1)
+#         self.erp = Twist()
 
 #     def pub_erp(self, steer):
-#         self.steer = steer
-#         self.steer_pub.publish(self.steer)
+#         speed = 70
+#         self.erp.linear.x = speed
+#         self.erp.angular.z = steer
+#         self.erp_pub.publish(self.erp)
+        
+class PublishToState:
+    def __init__(self):
+        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=10)
+        self.steer = Int16()
+
+    def pub_erp(self, steer):
+        self.steer = steer
+        self.steer_pub.publish(self.steer)
         
 class lane_detection:
     def __init__(self):

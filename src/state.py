@@ -31,7 +31,7 @@ WHERE = 1
 CRUISING_SPEED = 80
 TUNNEL_SPEED = 50
 DYNAMIC_SPEED = 80
-LANE_SPEED = 50
+LANE_SPEED = 70
 
 # 미션별 SL 좌표
 if WHERE == 1: # 동국대 직선
@@ -67,6 +67,14 @@ def distance(mission_pose, s):
         determine = True
     return determine
 
+class sub_lane_steer():
+    def __init__(self):
+        self.sub_lane = rospy.Subscriber("lane_steer", Int16, self.lane_callback, queue_size=1)
+        self.lane_steer = 0.0
+    
+    def lane_callback(self, data):
+        self.lane_steer = data.data
+
 class publish_erp():
     def __init__(self):
         self.erp_pub = rospy.Publisher("erp_writes", Twist, queue_size=1)
@@ -82,15 +90,23 @@ class Mission_State():
         self.mission_state = 0
         self.mission_zone = 0
         self.static_cnt = 0
+        self.lane_done = False
         
         self.avoid = False
+        
+    def is_Lane(self, q):
+        if q > 1:
+            self.lane_done = True
+            return False
+        return True
 
-    def mission_update(self, s, is_obs):
+    def mission_update(self, s, q, is_obs):
         global mission_coord
 
         self.mission_zone = 0
-
-        if (distance(mission_coord["Tunnel"], s)):
+        if not self.lane_done and self.is_Lane(q):
+            self.mission_zone = 4
+        elif (distance(mission_coord["Tunnel"], s)):
             self.mission_zone = 3
         else:
             if self.avoid:
@@ -117,6 +133,7 @@ def main():
     pub = publish_erp()
     erp = sub_erp_state()
     MS = Mission_State()
+    sub_lane = sub_lane_steer()
 
     # Global Path 선언
     PATH_ROOT=(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))+"/path/npy_file/path/"
@@ -139,7 +156,7 @@ def main():
         print('current s', s)
         print('current q', q)
         print(erp.states)
-        state = MS.mission_update(s, Mission_dynamic_obstacle.is_obs(s, erp.obs))
+        state = MS.mission_update(s, Mission_dynamic_obstacle.is_obs(erp.pose, erp.obs))
         
         if not state:
             Mission_dynamic_obstacle.avoid = MS.avoid
@@ -174,7 +191,12 @@ def main():
             else:
                 steer = Mission_tunnel.get_steer()
             
-            speed = TUNNEL_SPEED   
+            speed = TUNNEL_SPEED 
+            
+        elif MS.mission_state == 4: # 차선
+            print("누끼누끼누끼누끼ㅓ끼ㅓㅣㅏㅓㅣㅏ")
+            steer = sub_lane.lane_steer
+            speed = LANE_SPEED
                 
         # rospy.sleep(3)
         print("steer: %d speed: %d"%(steer, speed))

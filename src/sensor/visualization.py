@@ -27,7 +27,7 @@ from sensor_msgs.msg import LaserScan, NavSatFix, PointCloud
 from std_msgs.msg import Header, Float64, ColorRGBA
 
 WHERE = 2
-where = 1 # 1 DGU 2 kcity 3 서울대 시흥캠퍼스 4 제주도
+where = 4 # 1 DGU 2 kcity 3 서울대 시흥캠퍼스 4 제주도
 
 #지도 정보 경로 설정
 PATH_ROOT=(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))+"/path/npy_file/" #/home/gigi/catkin_ws/src/macaron_3/
@@ -376,7 +376,7 @@ class Visualization():
         for b in self.erp.obs:
             d = ((self.erp.pose[0] - b[0])**2 + (self.erp.pose[1] - b[1])**2)**0.5
             print(d)
-            if d <= 10 : #### 이것만 괜찮은 거리로 고치면 돼
+            if d <= 0 : #### 이것만 괜찮은 거리로 고치면 돼
                 rviz_msg_obs=Marker(
                     header=Header(frame_id='macaron', stamp=rospy.get_rostime()),
                     ns="obs",

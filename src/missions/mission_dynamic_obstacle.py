@@ -34,8 +34,8 @@ def find_ind(pose, path):
 
 # 파라미터
 car_w_offset = 2.8 / 2.0
-car_f_offset = 0.7
-stop_dis = 3.0
+car_f_offset = 0.1
+stop_dis = 2.0
 restart_time = 10
 
 stop_dis = stop_dis + car_f_offset
