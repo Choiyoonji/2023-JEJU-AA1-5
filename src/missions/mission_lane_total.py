@@ -11,7 +11,7 @@ from sensor_msgs.msg import LaserScan
 from path_planning_tracking_dwa_PP import Path_Tracking_DWA
 
 class mission_lane_total:
-    def __init__(self, pose, heading, speed, steer, obs):
+    def __init__(self, filename):
         self.steer_sub = rospy.Subscriber("lane_steer", Int16, self.lane_callback, queue_size=1)
         self.lane_steer = 0.0
         
@@ -20,20 +20,20 @@ class mission_lane_total:
         self.exist_obs = None
         self.max_dis = 2.0
         
-        self.search_range = 30  # 중심 기준으로 양쪽 30도 범위 탐색
+        self.search_range = 20  # 중심 기준으로 양쪽 30도 범위 탐색
         
         self.stop = False
         self.avoid = False
         self.returning = False
         self.last_time_stop = 0
         self.last_time_avoid = 0
-        self.dwa_PP = Path_Tracking_DWA()
+        self.dwa_PP = Path_Tracking_DWA(filename, 0)
 
-        self.pose = pose
-        self.heading = heading
-        self.speed = speed
-        self.steer = steer
-        self.obs = obs
+        self.pose = [0,0]
+        self.heading = 0
+        self.speed = 0
+        self.steer = 0
+        self.obs = [[0,0]]
     
     def lane_callback(self, data):
         self.lane_steer = data
@@ -64,14 +64,19 @@ class mission_lane_total:
             if any(self.exist_obs):
                 self.last_time_avoid = time.time()
             else:
-                if self.last_time_avoid - time.time() > 10:
+                if self.last_time_avoid - time.time() > 5:
                     self.avoid = False
 
-    def get_steer(self):
+    def get_steer(self, pose, heading, speed, steer, obs):
+        self.pose = pose
+        self.heading = heading
+        self.speed = speed
+        self.steer = steer
+        self.obs = obs
         self.avoid_judgement()
         if not self.stop and self.avoid:
             return self.dwa_PP.gps_tracking(self.pose, self.heading, self.speed, self.steer, self.obs)
         elif not self.stop and not self.avoid:
-            return self.lane_steer  # 여기에 lane detection steer 리턴
+            return self.lane_steer
         else:
             pass

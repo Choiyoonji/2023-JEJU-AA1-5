@@ -95,7 +95,7 @@ class Mission_State():
         self.avoid = False
         
     def is_Lane(self, q):
-        if q > 1:
+        if q < 1:
             self.lane_done = True
             return False
         return True
@@ -112,9 +112,10 @@ class Mission_State():
             if self.avoid:
                 self.mission_zone = 1
             else:
-                self.mission_zone = 2
+                self.mission_zone = 1
+                # self.mission_zone = 2
             
-        self.mission_state = self.mission_zone
+        self.mission_state = self.mission_zone 
         
         if is_obs:
             self.static_cnt += 1
@@ -144,6 +145,7 @@ def main():
     Mission_cruising = mission_cruising(GLOBAL_PATH_NAME)    # path_tracking 할 경로 넣어주기 (macaron_3.path 폴더 안에 있어야함)
     Mission_dynamic_obstacle = mission_dynamic_obstacle(GLOBAL_PATH_NAME)
     Mission_tunnel = mission_tunnel(GLOBAL_PATH_NAME)
+    Mission_lane = mission_lane_total(GLOBAL_PATH_NAME)
     
     print("제주도 한라봉맛 마카롱")
     rospy.sleep(1)
@@ -156,7 +158,7 @@ def main():
         print('current s', s)
         print('current q', q)
         print(erp.states)
-        state = MS.mission_update(s, Mission_dynamic_obstacle.is_obs(erp.pose, erp.obs))
+        state = MS.mission_update(s, q, Mission_dynamic_obstacle.is_obs(erp.pose, erp.obs))
         
         if not state:
             Mission_dynamic_obstacle.avoid = MS.avoid
@@ -195,7 +197,7 @@ def main():
             
         elif MS.mission_state == 4: # 차선
             print("누끼누끼누끼누끼ㅓ끼ㅓㅣㅏㅓㅣㅏ")
-            steer = sub_lane.lane_steer
+            steer = Mission_lane.get_steer(erp.pose, erp.heading, erp.speed, erp.steer, erp.obs)
             speed = LANE_SPEED
                 
         # rospy.sleep(3)
