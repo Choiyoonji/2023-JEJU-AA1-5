@@ -85,7 +85,7 @@ class Mission_State():
         
         self.avoid = False
 
-    def mission_update(self, s):
+    def mission_update(self, s, is_obs):
         global mission_coord
 
         self.mission_zone = 0
@@ -95,18 +95,18 @@ class Mission_State():
         else:
             if self.avoid:
                 self.mission_zone = 1
-                self.static_cnt += 1
             else:
                 self.mission_zone = 2
             
         self.mission_state = self.mission_zone
         
-        if self.static_cnt > 200:
-            self.static_cnt = 0
-            self.avoid = 0
-            return self.avoid
-        else:
-            return True
+        if is_obs:
+            self.static_cnt += 1
+            if self.static_cnt > 50:
+                self.avoid = 0
+                return self.avoid
+        
+        return True
 
 def main():
     global WHERE
@@ -139,7 +139,7 @@ def main():
         print('current s', s)
         print('current q', q)
         print(erp.states)
-        state = MS.mission_update(s)
+        state = MS.mission_update(s, Mission_dynamic_obstacle.is_obs())
         
         if not state:
             Mission_dynamic_obstacle.avoid = MS.avoid
