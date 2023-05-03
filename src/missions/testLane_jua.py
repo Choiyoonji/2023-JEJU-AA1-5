@@ -1,502 +1,205 @@
 #! /usr/bin/env python
 # -- coding: utf-8 --
 import rospy
-from math import pi
-
-import os, sys
 import cv2
-# import cv2
-from matplotlib import image
-import concurrent.futures
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import image
+import os
 import time
-# import os
+from std_msgs.msg import Int16
 
-from geometry_msgs.msg import Twist
-from std_msgs.msg import Float64
+path = '/home/choiyoonji/catkin_ws/src/2023-JEJU-AA1-5/src/missions/video1502937659 (1).mov'
 
-class PublishToErp:
+class PublishToState:
     def __init__(self):
-        self.erp_pub = rospy.Publisher("erp_write", Twist, queue_size=30)
-        self.erp = Twist()
+        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=1)
+        self.steer = Int16()
 
-    def pub_erp(self, speed, steer):
-        self.erp.linear.x = speed
-        self.erp.angular.z = steer
-        self.erp_pub.publish(self.erp)
+    def pub_erp(self, steer):
+        self.steer = steer
+        self.steer_pub.publish(self.steer)
         
-class lane_detection:
+class Lane_detection:
     def __init__(self):
-        self.prevCenter = []
-        self.prevRawCenter = []
-        self.prevDir = []
-        self.frameLength = 0
-        self.center = 0
-        self.currentDirection = 0 # -1이면 왼쪽, 1이면 오른쪽
-        self.continueToRevise = 0
-        self.toReduce = 1
-        self.sumError = 0
-        
-    def grey(self, image):
-        return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) #색상공간 변환 함수
-    def gauss(self, image):
-        return cv2.GaussianBlur(image, (5, 5), 0) #가우시안 필터 적용
-    def canny(self, image):
-        edges = cv2.Canny(image,50,150) #물체 외곽선 추출,threshold 값 조정
-        return edges
-
-    def region(self, image):
-        height, width = image.shape # 높이와 너비 얻기
-        
-        # 제주도 가서 쓸 해상도로 최적화 해야함
-        square = np.array([[(0, 340), (160, height // 2 + 30), (480, height // 2 + 30), (width, 340), (width, height), (0, height)]])
-
-        mask = np.zeros_like(image) # 0 array 생성
-        mask = cv2.fillPoly(mask, square, 255) # 도형 생성
-        mask = cv2.bitwise_and(image, mask) # 이미지 비트연산
-        return mask
-
-    def display_lines(self, image, lines):
-        lines_image = np.zeros_like(image)
-        #make sure array isn't empty
-        if lines is not None:
-            for line in lines:
-                x1, y1, x2, y2 = line
-
-                cv2.line(lines_image, (x1, y1), (x2, y2), (255, 0, 0), 10) #직선 그리기
-        return lines_image
-
-
-    # 입력 이미지와 찾은 차선 좌표(lines)를 받기
-    # 좌우 차선의 평균 기울기와 y절편 계산
-    # 좌우 차선 그린 결과 값 반환
-    def average(self, image, lines):
-        left = []
-        right = []
-        for line in lines:
-            print(line)
-            x1, y1, x2, y2 = line.reshape(4) # 배열 변경
-
-            #fit line to points, return slope and y-int
-            parameters = np.polyfit((x1, x2), (y1, y2), 1) # 선의 기울기와 y절편 계산(양수:우측 차선) 
-            print(parameters)
-            slope = parameters[0]
-            y_int = parameters[1]
-            #lines on the right have positive slope, and lines on the left have neg slope
-            if slope < 0:
-                left.append((slope, y_int))
-            else:
-                right.append((slope, y_int))
-        #takes average among all the columns (column0: slope, column1: y_int)
-        #좌우 리스트에 저장된 기울기와 y절편을 이용하여 평균 계산(axis=0이면 열 평균)
-        right_avg = np.average(right, axis=0)
-        left_avg = np.average(left, axis=0)
-        #create lines based on averages calculates
-        left_line = self.make_points(image, left_avg) # 좌우 차선 그리기(입력된 이미지와 기울기,y절편을 이용)
-        right_line = self.make_points(image, right_avg)
-        return np.array([left_line, right_line]) #계산된 차선을 배열로 반환
-
-    def make_points(self, image, average):
-        print(average)
-        slope, y_int = average
-        y1 = image.shape[0]
-        #how long we want our lines to be --> 3/5 the size of the image
-        y2 = int(y1 * (3/5))
-        #determine algebraically
-        x1 = int((y1 - y_int) // slope)
-        x2 = int((y2 - y_int) // slope)
-        
-        x1 = min(x1, 100000)
-        y1 = min(y1, 100000)
-        x2 = min(x2, 100000)
-        y2 = min(y2, 100000)
-        x1 = max(x1, -100000)
-        y1 = max(y1, -100000)
-        x2 = max(x2, -100000)
-        y2 = max(y2, -100000)
-        return np.array([x1, y1, x2, y2])
-
-    def high_contrast(self, img):
-        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8)) 
-        cl = clahe.apply(l)
-        limg = cv2.merge((cl, a, b))
-        final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-        
-        return final
-
-
-    def linearFunction(self, k, x, x1, y1):
-        print("k ::::::::::::::::::", k)
-        return k *(x - x1) + y1
-
-    def extendLine(self, pt1, pt2):
-        if pt1[0] - pt2[0] != 0:
-            dx = pt1[0] - pt2[0]    
-            dy = pt1[1] - pt2[1]
-            
-            k = dy / dx
-            
-            x = 320
-            y = int(self.linearFunction(k, x, pt1[0], pt1[1])) 
-        else:
-            k = 0
-            return pt1[0], pt1[1], k
-        
-        return x, y, k
-
-    def outlinersIQR(self, data):
-        X = []
-        Y = []
-        
-        for i in range(len(data)):
-            X.append(data[i][0])
-            Y.append(data[i][1])
-        
-        q25, q75 = np.quantile(Y, 0.25), np.quantile(Y, 0.75)          
-        iqr = q75 - q25   
-        cut_off = iqr # * 1.5          
-        lower, upper = q25 - cut_off, q75 + cut_off     
+        self.image = None
     
-        newX = []    
-        newY = []
-        
-        for i in range(len(Y)):
-            if lower < Y[i] < upper:
-                newY.append(Y[i])
-        
-        # print("newY ::::::::::::::", newY)
-        
-        count = 0 
-        
-        for i in range(len(Y)):
-            if Y[i] not in newY:
-                count += 1
-                # print(Y[i], " not in list")
-            else:
-                newX.append(X[i])
+    def region_of_interest(self, image, vertices, color3=(255,255,255), color1=255): # ROI 셋팅
 
-        if count == 0: 
-            pass
-            # print("############################################")
-        else:
-            print("Remove Noises")
-            
-        return newX, newY
-
-    def divideLine(self, img, copy):
+        mask = np.zeros_like(image) # mask = img와 같은 크기의 빈 이미지
         
-        left = []
-        right = []
-        h, w = img.shape
+        if len(image.shape) > 2: # Color 이미지(3채널)라면 :
+            color = color3
+        else: # 흑백 이미지(1채널)라면 :
+            color = color1
+            
+        # vertices에 정한 점들로 이뤄진 다각형부분(ROI 설정부분)을 color로 채움 
+        cv2.fillPoly(mask, vertices, color)
         
-        for y in range(h // 3 * 2, h):
-            for x in range(w // 6):
-                if img[y][x] == 255:
-                    left.append((x, y))
-                    
-            for x in range(w // 6 * 5, w):
-                if img[y][x] == 255:
-                        right.append((x, y))
+        # 이미지와 color로 채워진 ROI를 합침
+        ROI_image = cv2.bitwise_and(image, mask)
+        return ROI_image
+
+    def mark_img(self, img, mark, image, blue_threshold=200, green_threshold=200, red_threshold=200): # 흰색 차선 찾기
+        # print('image : ', image)
+        #  BGR 제한 값
+        bgr_threshold = [blue_threshold, green_threshold, red_threshold]
+
+        # BGR 제한 값보다 작으면 검은색으로
+        thresholds = (image[:,:,0] < bgr_threshold[0]) \
+                    | (image[:,:,1] < bgr_threshold[1]) \
+                    | (image[:,:,2] < bgr_threshold[2])
+        # print('thresholds : ', thresholds)
+        mark[thresholds] = [0,0,0]
+        return mark
+
+    def get_lane_center(self, image):
+        # 흰색 픽셀의 좌표 구하기
+        white_pixels = np.argwhere(image[:,:,2] > 230)
+
+        # 흰색 픽셀이 없으면 None 반환
+        if len(white_pixels) == 0:
+            return None
+
+        # 흰색 픽셀의 x, y 좌표 평균값 구하기
+        x_mean = np.mean(white_pixels[:,1])
+        y_mean = np.mean(white_pixels[:,0])
         
-        if len(right) != 0 or len(left) != 0:
-    
-
-            # print("len(left)", len(left))
-            # print("len(right)", len(right))
-            
-            IGNORED = 100
-            
-            if len(left) > IGNORED:
-                # print("left[:][0]", left[:])
-                LX, LY = self.outlinersIQR(left)
-
-                # LX = left[:][0]
-                # LY = left[:][1]
-            else:
-                LX = [0]
-                LY = [300]
-                
-            if len(right) > IGNORED:
-                RX, RY = self.outlinersIQR(right)
-            else:
-                RX = [640]
-                RY = [300]
-            
-            avgLX = int(np.mean(LX, axis=0))
-            avgLY = int(np.mean(LY, axis=0))
-            avgRX = int(np.mean(RX, axis=0))
-            avgRY = int(np.mean(RY, axis=0))
-            
-            # il, ir = len(left), len(right)
-            # center = ((left[il // 2][0] + right[ir // 2][0]) // 2, (left[il // 2][1] + right[ir // 2][1]) // 2)
-            
-            # if 450 < LY[0] < 640:
-            for x, y in zip(LX, LY):
-                cv2.circle(copy, (x, y), 2, (0, 0, 255), -1)
-            
-            # if 450 < RY[-1] < 640:
-            for x, y in zip(RX, RY):
-                cv2.circle(copy, (x, y), 2, (0, 0, 255), -1)
-            
-            # 변수 미리 초기화
-            lpt1, lpt2, rpt1, rpt2 = [0, 0, 0, 0]
-            lk, rk = [0, 0]
-            
-            if len(LX) < IGNORED and len(RX) < IGNORED: 
-                self.currentDirection = 0 
-                #########################
-                print("Detected Nothing") 
-                #########################
-            elif len(LX) < IGNORED : # or RY[-1] < 450
-                rpt1 = (min(RX), min(RY))
-                rpt2 = (max(RX), max(RY))
-                rx, ry, rk = self.extendLine(rpt1, rpt2)
-                lx, ly, lk = [RX[0], RY[0], 0]
-                
-                cv2.line(copy, rpt1, (rx, ry), (0, 0, 0), 4)
-            elif len(RX) < IGNORED : # or LY[0] < 450
-                lpt1 = (min(LX), max(LY))
-                lpt2 = (max(LX), min(LY))
-                lx, ly, lk = self.extendLine(lpt1, lpt2)
-                rx, ry, rk = [LX[0], LY[0], 0]
-                
-                cv2.line(copy, lpt1, (lx, ly), (0, 0, 0), 4)
-            else:
-                lpt1 = (min(LX), max(LY))
-                lpt2 = (max(LX), min(LY))
-                lx, ly, lk = self.extendLine(lpt1, lpt2)
-                
-                rpt1 = (min(RX), min(RY))
-                rpt2 = (max(RX), max(RY))
-                rx, ry, rk = self.extendLine(rpt1, rpt2)
-                
-                cv2.line(copy, lpt1, (lx, ly), (0, 0, 0), 4)
-                cv2.line(copy, rpt1, (rx, ry), (0, 0, 0), 4)
-            
-            
-            # center = [(avgLX + avgRX) // 2, (avgLY + avgRY) // 2]
-            center = [w // 2, h // 2]
-            
-            # K = [lk, rk]
-            # 보정 계수 조정
-            a = 20
-            b = 7 
-            
-            if lk == 0 and rk == 0:
-                #########################
-                print("Detected Nothing") 
-                #########################
-                self.currentDirection = 0
-                center[0] += 0
-            elif lk == 0:
-                # print("Turn Left : ", a * (abs(rk) - abs(lk)))
-                self.currentDirection = -1
-                center[0] -= int(a * (abs(rk) - abs(lk)))
-            elif rk == 0:
-                # print("Turn Right : ", a * (abs(lk) - abs(rk)))
-                self.currentDirection = 1
-                center[0] += int(a * (abs(lk) - abs(rk)))
-            else:
-                print("abs(lk) :", abs(lk))
-                print("abs(rk) :", abs(rk))
-                if abs(lk) < abs(rk):
-                    # print("Turn Right : ", b * (abs(lk) - abs(rk)))
-                    self.currentDirection = 1
-                    center[0] += int(b * abs(abs(lk) - abs(rk)))
-                else:
-                    # print("Turn Left : ", b * (abs(rk) - abs(lk)))
-                    self.currentDirection = -1
-                    center[0] -= int(b * abs(abs(rk) - abs(lk)))
-                    
-            print("center :", center)
-            # self.prevRawCenter.append(center[0])
-            
-            # PREVENT_ERROR = 15
-            # TURN_SLOWLY = 6 * self.toReduce
-            # if self.frameLength > 5 or self.continueToRevise == 1:
-            #     # for i in range(self.frameLength - 5, self.frameLength):
-            #     # self.sumError += abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY * (TURN_SLOWLY - 1)
-                
-            #     if abs(center[0] - self.prevCenter[-1]) > PREVENT_ERROR:
-            #         if self.currentDirection == -1:
-            #             center[0] = int(self.prevCenter[-1] - abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY) 
-            #         if self.currentDirection == 1:
-            #             center[0] = int(self.prevCenter[-1] + abs(center[0] - self.prevCenter[-1]) // TURN_SLOWLY)
-                
-                
-            #     self.continueToRevise = 1
-            #     self.toReduce += 0.03
-            #     self.prevCenter.append(center[0])
-                
-            #     self.frameLength += 1
-            # else:
-            #     self.prevCenter.append(center[0])
-            #     self.frameLength += 1
-                
-                
-            if center[0] > w // 2:
-                print("Turn Right : ", abs(center[0] - w // 2))
-            else:
-                print("Turn Left : ", abs(center[0] - w // 2))
-                
-            cv2.line(copy, (w // 2, h), (w // 2, 0), (255, 255, 255), 2)
-            cv2.circle(copy, tuple(center), 10, (0, 255, 0), -1)
-            
-            return center[0] - w // 2 # 최종 steer값 -면 왼쪽, +면 오른쪽
-            
-        # if (len(right) < 2): 
-        #     print("Turn right!!!!")
-        # else:
-        #     print("left :", left[0], left[-1])
-        #     print("right :", right[0], right[-1])
-        #     x, y = extendLine(right[0], right[-1])
-        #     cv2.circle(copy, right[0])
-        #     cv2.line(copy, right[0], right[-1], (0, 0, 255), 5)
-            
-        # if (len(left) < 2): 
-        #     print("Turn left!!!!")
-        # else:
-        #     print("left :", left[0], left[-1])
-        #     print("right :", right[0], right[-1])
-        #     x, y = extendLine(left[0], left[-1])
-        #     cv2.line(copy, left[0], left[-1], (0, 0, 255), 5)
-        
-        
-        return img
-###############################################################333
-    # def erp_callback(self, data):
-    #     self.erp_speed = data.read_speed
-    #     self.erp_steer = data.read_steer
-
-    # def pub_serial(self, speed): #gear removed
-    #     speed, self.steer = int(speed), int(self.steer)
-    #     speed = 60 #fixed
-    #     # if brake <= 1:
-    #     #     brake = 1
-    #     # elif brake >= 200:
-    #     #     brake = 200
-
-    #     self.erp.write_speed = speed
-    #     self.erp.write_steer = self.steer
-
-    #     self.erp_pub.publish(self.erp)
-    # self.erp.write_brake = brake
-    
-    def run(self):    
-        cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
-        # cap = os.getcwd() #현재 경로 헷갈릴때 확인하기(비디오 넣어서 확인할때만!)
-        # print(cap)
-        # cap = cv2.VideoCapture(os.getcwd() + "/catkin_ws/src/2023-JEJU-AA1-5-main/src/missions/track-s.mkv")
-        # fourcc = cv2.VideoWriter_fourcc(*'X264')
-        # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
-
+        # if(250<x_mean<450 and 90 <y_mean <170) :
+        #     x_mean = 300
+        #     y_mean = 125
+        #     return(int(x_mean) , int(y_mean))
         
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                print("Can't receive frame (stream end?). Exiting ... ")
-                break
-            
-            current = time.time()
-            h, w, _= frame.shape
-            
-            # print("shape :", frame.shape)
-            # frame = high_contrast(frame)
-            copy = frame
-            gaus = self.gauss(frame)
-            edges = cv2.Canny(gaus,50,150)
-            # edges = region(edges)
-            edges = self.region(edges)
-            
-            steer = self.divideLine(edges, copy)
-            print("steer :", steer)
-            cv2.imshow('edges', edges)
-            cv2.imshow('copy', copy)
+        return (int(x_mean), int(y_mean)), white_pixels
 
-            print("time :", time.time() - current, "s")
-            # cv2.imshow('frame', lanes)
-            # time.sleep(1)
-            # time.sleep(0.00000005)
-            if cv2.waitKey(1) == ord('q'):
-                break
-                
+    def sliding_window(self, img, nwindows=15, margin=90, minpix=5):
+        histogram = np.sum(img[img.shape[0] // 2:, :], axis=0)
 
-        cap.release()
-        # out.release()
-        cv2.destroyAllWindows()
+        out_img = np.dstack((img, img, img))
+
+        midpoint = np.int64(320)  # (path) -> 350, (2) -> 500
+        leftx_base = np.argmax(histogram[:midpoint])
         
+        rightx_base = np.argmax(histogram[midpoint:]) + midpoint
+
+        window_height = np.int64(img.shape[0] // nwindows)
+
+        nonzero = img.nonzero()
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+
+        leftx_current = leftx_base 
+        rightx_current = rightx_base + 50 #원래 mid 400에 140, mid 320 에 100,이 윈도우 검출 더 잘됨
+
+        left_lane_inds = []
+        right_lane_inds = []
+        
+        last_window_left = 0
+        last_window_right = 0
+
+        for window in range(nwindows):
+            win_y_low = img.shape[0] - (window + 1) * window_height
+            win_y_high = img.shape[0] - window * window_height
+            
+            # if leftx_current 
+            
+            win_xleft_low = leftx_current - margin
+            win_xleft_high = leftx_current + margin
+            win_xright_low = rightx_current - margin
+            win_xright_high = rightx_current + margin
+            
+            last_window_left += leftx_current
+            last_window_right += rightx_current
+
+            cv2.rectangle(out_img, (win_xleft_low, win_y_low), (win_xleft_high, win_y_high), (0, 255, 0), 2)
+            cv2.rectangle(out_img, (win_xright_low, win_y_low), (win_xright_high, win_y_high), (0, 255, 0), 2)
+
+            good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
+                            (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
+            good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
+                            (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
+
+            left_lane_inds.append(good_left_inds)
+            right_lane_inds.append(good_right_inds)
+
+            if len(good_left_inds) > minpix and np.int64(np.mean(nonzerox[good_left_inds])) < 320:
+                leftx_current = np.int64(np.mean(nonzerox[good_left_inds]))
+            if len(good_right_inds) > minpix and np.int64(np.mean(nonzerox[good_right_inds])) > 320:
+                rightx_current = np.int64(np.mean(nonzerox[good_right_inds]))
+        
+        leftx = last_window_left / nwindows if 0 <= (last_window_left / nwindows) < 320 else 0
+        rightx = last_window_right / nwindows if 640 >= (last_window_right / nwindows) > 320 else 640
+        # print('leftx : ', leftx, 'rightx : ', rightx)
+        
+        left_lane_inds = np.concatenate(left_lane_inds)
+        right_lane_inds = np.concatenate(right_lane_inds)
+
+        # leftx = nonzerox[left_lane_inds]
+        lefty = nonzeroy[left_lane_inds]
+        # rightx = nonzerox[right_lane_inds]
+        righty = nonzeroy[right_lane_inds]
+
+        return leftx, lefty, rightx, righty, out_img
+
+
 def main():
     rospy.init_node('lane_node', anonymous=True)
-    Lane = lane_detection()
-    pub = PublishToErp()
-    
-    cap = cv2.VideoCapture(0) #웹캠으로 받아오기, 2번 사용하면 됨
+    Lane = Lane_detection()
+    pub = PublishToState()
+
+    cap = cv2.VideoCapture(path) #웹캠으로 받아오기, 2번 사용하면 됨
+    # cap = cv2.resize(cap,{500,500})
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,640)  #해상도 조절해주기,웹캠사용시 필요
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
-    
-    speed = 50
 
     while not rospy.is_shutdown():
         while cap.isOpened():
-            ret, frame = cap.read()
+            ret, image = cap.read()
+
             if not ret:
                 print("Can't receive frame (stream end?). Exiting ... ")
                 break
-            
-            current = time.time()
-            h, w, _= frame.shape
-            
-            copy = frame
-            gaus = Lane.gauss(frame)
-            edges = cv2.Canny(gaus,50,150)
-            edges = Lane.region(edges)
-            
-            steer = Lane.divideLine(edges, copy) # return center[0] - w // 2 스티어값
-            print("steer :", steer)
-            cv2.imshow('edges', edges)
-            cv2.imshow('copy', copy)
+            height, width = image.shape[:2]
 
-            print("time :", time.time() - current, "s")
+            vertices = np.array([[(0, 0), (0, height), (width, height), (width, 0)]], dtype=np.int32)
+            roi_img = Lane.region_of_interest(image, vertices, (0,0,255))
+
+            mark = np.copy(roi_img)
+            # print('mark : ', mark)
             
-            if cv2.waitKey(1) == ord('q'):
+            mark = Lane.mark_img(roi_img, mark, image)
+
+            gray = cv2.cvtColor(mark, cv2.COLOR_BGR2GRAY)
+            leftx, _, rightx, _, out_img = Lane.sliding_window(gray)
+
+            center = (int(0.54 * (leftx + rightx)), 100)
+            # print('center : ', center)
+
+            steer = int(0.5 * (leftx + rightx) - 208)
+
+            cv2.circle(image, center, 5, (0, 255, 0), -1)
+
+            time.sleep(0.012)
+            cv2.line(image, (width // 2, height), (width // 2, 0), (255, 255, 255), 2)
+
+            cv2.imshow('img', image)
+            cv2.imshow('results', mark)
+            cv2.imshow('gray',gray)
+
+            # 슬라이딩 윈도우 결과를 출력
+            cv2.imshow('sliding_window', out_img)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            
-            steer = np.clip(steer,-22, 22)
-            pub.pub_erp(speed, steer)
-            
+
+            steer = np.clip(steer, -22, 22)
+            print('steer : ', steer)
+            pub.pub_erp(int(steer))
+
         cap.release()
         cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
     main()
-
-
-# test = lane_detection()
-# test.run()
-
-# if __name__ == '__main__':
-    
-#     test = lane_detection()
-
-#     start = time.time()
-
-#     total_result = 0
-#     pool = concurrent.futures.ProcessPoolExecutor(max_workers=4)
-
-#     procs = []
-#     for i in range(4):
-#         procs.append(pool.submit(test.run, i))
-
-#     for p in concurrent.futures.as_completed(procs):
-#         total_result += p.result()
-
-#     end = time.time()
-
-#     print("수행시간: %f 초" % (end - start))
-#     print("총결괏값: %s" % total_result)
