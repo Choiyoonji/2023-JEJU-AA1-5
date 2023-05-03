@@ -15,8 +15,8 @@ const int STEER_PWM = 8; // motor speed
 const int STEER_DIR = 9; // left or right
 const int STEER_BRK = 10; // let motor move
 
-#define CLK 52   // 3번핀을 CLK로 지정 otb
-#define DT 50 // 2번핀을 DT로 지정 ota
+#define CLK 2   // 3번핀을 CLK로 지정 otb
+#define DT 3 // 2번핀을 DT로 지정 ota
 //////////////////////////////
 
 //////////////////////////////
@@ -54,7 +54,7 @@ int currentGear = 0;
 void setMode(const geometry_msgs::Twist& msg){
   float speed = msg.linear.x;
   float steer = msg.angular.z;
-  int en = encoder()*4.4;
+  int en = counter*4.4;
 
   digitalWrite(RUN_BRK, LOW);
 
@@ -81,7 +81,7 @@ void setCommand(const geometry_msgs::Twist& msg){
   static int velocity_F = 0;
   static int velocity_B = 0;
  
-  int currentAngle = encoder()*4.4;
+  int currentAngle = counter*4.4;
 
   digitalWrite(RUN_BRK, LOW);
 
@@ -169,7 +169,7 @@ void turnLeft(int intSteer)
   int max_en = min_en + 1;
 
   while(1){
-    int en = encoder(); 
+    int en = counter; 
 
     if(en >= min_en && en <= max_en) break;
   }
@@ -193,7 +193,7 @@ void turnRight(int intSteer)
   int min_en = max_en - 1;
 
   while(1){
-    int en = encoder(); 
+    int en = counter; 
     if(en >= min_en && en <= max_en) break;
   }
 
@@ -216,7 +216,7 @@ int encoder()
 	// CLK핀의 상태를 확인
 	currentStateCLK = digitalRead(CLK);
 
-	// CLK핀의 신호가 바뀌었고(즉, 로터리엔코더의 회전이 발생했했고), 그 상태가 HIGH이면(최소 회전단위의 회전이 발생했다면) 
+	// CLK핀의 신호가 바뀌었고(즉, 로터리엔코더의 회전이 발생했고), 그 상태가 HIGH이면(최소 회전단위의 회전이 발생했다면) 
 	if (currentStateCLK != lastStateCLK  && currentStateCLK == 1){
 
 		// DT핀의 신호를 확인해서 엔코더의 회전 방향을 확인함.
@@ -262,13 +262,16 @@ void setup() {
 
 	// CLK핀의 현재 상태 확인
 	lastStateCLK = digitalRead(CLK);	
+
+  attachInterrupt(0, encoder, CHANGE);
+	attachInterrupt(1, encoder, CHANGE);
 }
 
 int intSpeed = 0;
 int intSteer = 0;
 
 void loop() {
-  intSteer = encoder()*4.4;
+  intSteer = counter*4.4;
 
   // erpRead.read_E_stop = 0;
   // erpRead.read_gear = currentGear;
