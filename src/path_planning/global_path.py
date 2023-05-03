@@ -51,7 +51,7 @@ class GlobalPath: #'/home/macaron/catkin_ws/src/jeju/path/8jung_test2.npy' #  '/
         return bisect.bisect(self.s, s) - 1
         
     # mode 0 -> 찾던 위치 근처에서 찾기, mode 1 처음부터 찾기
-    def xy2sl(self,x, y, mode = 0):
+    def xy2sl(self,x, y, mode = 1):
         ref_index = self.getClosestSIndexCurXY(x, y, mode)
         self.cur_ref_index = ref_index
         return self.s[ref_index], cartesian_frenet_conversion.calcOffsetPoint(x, y, self.rx[ref_index], self.ry[ref_index], self.ryaw[ref_index])

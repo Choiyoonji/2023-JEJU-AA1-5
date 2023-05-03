@@ -36,7 +36,7 @@ void goBackward(int intVelocity);
 void turnLeft(int intSteer);
 void turnRight(int intSteer);
 void brake(bool k); 
-int encoder();
+void encoder();
 ///////////////////////////////
 
 ros::NodeHandle  nh;
@@ -80,7 +80,7 @@ void setCommand(const geometry_msgs::Twist& msg){
 
   static int velocity_F = 0;
   static int velocity_B = 0;
- 
+  encoder();
   int currentAngle = counter*4.4;
 
   digitalWrite(RUN_BRK, LOW);
@@ -169,6 +169,7 @@ void turnLeft(int intSteer)
   int max_en = min_en + 1;
 
   while(1){
+    encoder();
     int en = counter; 
 
     if(en >= min_en && en <= max_en) break;
@@ -193,6 +194,7 @@ void turnRight(int intSteer)
   int min_en = max_en - 1;
 
   while(1){
+    encoder();
     int en = counter; 
     if(en >= min_en && en <= max_en) break;
   }
@@ -211,7 +213,7 @@ void brake(bool k = 1) // k가 1이면 brake 핀으로 정지, 0이면 pwm 핀�
   delay(30);
 }
 
-int encoder()
+void encoder()
 {
 	// CLK핀의 상태를 확인
 	currentStateCLK = digitalRead(CLK);
@@ -230,12 +232,14 @@ int encoder()
 		}
 	}
 
+  if(counter > 22) counter = 22;
+  else if(counter < -22) counter = -22;
+
 	// 현재의 CLK상태를 저장
 	lastStateCLK = currentStateCLK;
 	
   delay(1);
 
-  return counter;
 }
 
 void setup() {

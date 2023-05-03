@@ -28,7 +28,7 @@ from geometry_msgs.msg import Twist
         
 class PublishToState:
     def __init__(self):
-        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=10)
+        self.steer_pub = rospy.Publisher("lane_steer", Int16, queue_size=1)
         self.steer = Int16()
 
     def pub_erp(self, steer):
@@ -287,6 +287,9 @@ class lane_detection:
             a = 20
             b = 7 
             
+            if abs(lk) < 0.6 and rk != 0: lk = 0
+            if abs(rk) < 0.6 and lk != 0: rk = 0
+            
             if lk == 0 and rk == 0:
                 #########################
                 print("Detected Nothing") 
@@ -295,10 +298,12 @@ class lane_detection:
                 center[0] += 0
             elif lk == 0:
                 # print("Turn Left : ", a * (abs(rk) - abs(lk)))
+                print("abs(rk) :", abs(rk))
                 self.currentDirection = -1
                 center[0] -= int(a * (abs(rk) - abs(lk)))
             elif rk == 0:
                 # print("Turn Right : ", a * (abs(lk) - abs(rk)))
+                print("abs(lk) :", abs(lk))
                 self.currentDirection = 1
                 center[0] += int(a * (abs(lk) - abs(rk)))
             else:
@@ -328,51 +333,51 @@ class lane_detection:
         
         return 0.0
     
-    def run(self):    
-        cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)  #해상도 조절해주기,웹캠사용시 필요
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
-        # cap = os.getcwd() #현재 경로 헷갈릴때 확인하기(비디오 넣어서 확인할때만!)
-        # print(cap)
-        # cap = cv2.VideoCapture(os.getcwd() + "/catkin_ws/src/2023-JEJU-AA1-5-main/src/missions/track-s.mkv")
-        # fourcc = cv2.VideoWriter_fourcc(*'X264')
-        # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
+    # def run(self):    
+    #     cap = cv2.VideoCapture(2) #웹캠으로 받아오기, 2번 사용하면 됨
+    #     cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)  #해상도 조절해주기,웹캠사용시 필요
+    #     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
+    #     # cap = os.getcwd() #현재 경로 헷갈릴때 확인하기(비디오 넣어서 확인할때만!)
+    #     # print(cap)
+    #     # cap = cv2.VideoCapture(os.getcwd() + "/catkin_ws/src/2023-JEJU-AA1-5-main/src/missions/track-s.mkv")
+    #     # fourcc = cv2.VideoWriter_fourcc(*'X264')
+    #     # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640,480))
 
         
 
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                print("Can't receive frame (stream end?). Exiting ... ")
-                break
+    #     while cap.isOpened():
+    #         ret, frame = cap.read()
+    #         if not ret:
+    #             print("Can't receive frame (stream end?). Exiting ... ")
+    #             break
             
-            current = time.time()
-            h, w, _= frame.shape
+    #         current = time.time()
+    #         h, w, _= frame.shape
             
-            # print("shape :", frame.shape)
-            # frame = high_contrast(frame)
-            copy = frame
-            gaus = self.gauss(frame)
-            edges = cv2.Canny(gaus,50,150)
-            # edges = region(edges)
-            edges = self.region(edges)
+    #         # print("shape :", frame.shape)
+    #         # frame = high_contrast(frame)
+    #         copy = frame
+    #         gaus = self.gauss(frame)
+    #         edges = cv2.Canny(gaus,50,150)
+    #         # edges = region(edges)
+    #         edges = self.region(edges)
             
-            steer = self.divideLine(edges, copy)
-            print("steer :", steer)
-            cv2.imshow('edges', edges)
-            cv2.imshow('copy', copy)
+    #         steer = self.divideLine(edges, copy)
+    #         print("steer :", steer)
+    #         cv2.imshow('edges', edges)
+    #         cv2.imshow('copy', copy)
 
-            print("time :", time.time() - current, "s")
-            # cv2.imshow('frame', lanes)
-            # time.sleep(1)
-            # time.sleep(0.00000005)
-            if cv2.waitKey(1) == ord('q'):
-                break
+    #         print("time :", time.time() - current, "s")
+    #         # cv2.imshow('frame', lanes)
+    #         # time.sleep(1)
+    #         # time.sleep(0.00000005)
+    #         if cv2.waitKey(1) == ord('q'):
+    #             break
                 
 
-        cap.release()
-        # out.release()
-        cv2.destroyAllWindows()
+    #     cap.release()
+    #     # out.release()
+    #     cv2.destroyAllWindows()
         
 def main():
     rospy.init_node('lane_node', anonymous=True)
@@ -409,14 +414,14 @@ def main():
             
             # print("time :", time.time() - current, "s")
              
-            interval = time.time() - current
-            rospy.sleep(0.1-interval)
+            # interval = time.time() - current
+            # rospy.sleep(0.1-interval)
              
             if cv2.waitKey(1) == ord('q'):
                 break
             
-            steer = np.clip(steer*1.2, -22, 22)
-            pub.pub_erp(steer)
+            steer = np.clip(steer, -22, 22)
+            pub.pub_erp(int(steer))
             
             
         cap.release()

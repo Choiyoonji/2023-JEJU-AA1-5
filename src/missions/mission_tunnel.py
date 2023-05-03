@@ -2,6 +2,7 @@
 import rospy
 import os
 import numpy as np
+from math import cos, pi
 
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
@@ -26,8 +27,9 @@ class mission_tunnel:
     def scan_callback(self, scan):
         sub_scan = np.array(scan.ranges[0:810 + 1:3])  # 0° ~ 270° 범위, 0.333° 간격의 811개 data 를 1° 간격의 361개 data 로 필터링
         sub_scan = np.where(sub_scan >= self.max_dis, self.max_dis, sub_scan)  # max_dis 를 넘는 값 or inf -> max_dis
-        self.sub_scan = np.where(sub_scan <= 0.003, self.max_dis, sub_scan)  # 0.002 로 뜨는 noise -> max_dis
-    
+        self.sub_scan = np.where(sub_scan <= 0.1, self.max_dis, sub_scan)  # 0.002 로 뜨는 noise -> max_dis
+        
+        
     # def two_dis(p1, p2):
     # a = p1[0] - p2[0]
     # b = p1[1] - p2[1]
@@ -59,22 +61,41 @@ class mission_tunnel:
     
     # noinspection PyMethodMayBeStatic
     def find_largest_second_largest(self, list_data):
-        r_index = np.argmax(list_data >= 0.1)
-        l_index = np.argmax(np.flip(list_data) >= 0.1)
+        r_index = np.argmax(list_data >= 0.3)
+        l_index = np.argmax(np.flip(list_data) >= 0.3)
         return r_index, 180 - l_index
 
     def search_tunnel_entrance(self):
-        diff_list = np.abs(np.diff(self.sub_scan[45:225 + 1]))
+        # ver1
+        scan_data = self.sub_scan[45:225 + 1]
+        for i in range(len(scan_data)):
+            if abs(scan_data[i] * cos(i * pi / 180)) > 0.8:
+                scan_data[i] = 0.8
+        diff_list = np.abs(np.diff(scan_data))
         r_angle, l_angle = self.find_largest_second_largest(diff_list)
-        # goal_angle = 0.5 * (r_angle + l_angle)
-        # center = int(0.5 * len(diff_list))
-        # print('r_index : {0} , l_index : {1}'.format(r_angle, l_angle))
+        center = int(len(scan_data) * 0.5)
+        goal_angle = 0.5 * (r_angle + l_angle)
         if 0 < r_angle <= 10 or 170 <= l_angle < 180:
             self.tunnel_flag = True
             print('################################################################################ \
                   터널 진입 ########################################################################')
-        # return np.clip(center - goal_angle, -22, 22)
+        return np.clip(center - goal_angle, -22, 22)
+        # ↑↑ 여기까지 ↑↑
+        
+        # ver2
+        # scan_data = self.sub_scan[90:180 + 1]
+        # diff_list = np.abs(np.diff(scan_data))
+        # r_angle, l_angle = self.find_largest_second_largest(diff_list)
+        # center = int(len(scan_data) * 0.5)
+        # goal_angle = 0.5 * (r_angle + l_angle)
+        # if self.sub_scan[55] < self.tunnel_width and self.sub_scan[215] <self.tunnel_width:
+        #     self.tunnel_flag = True
+        #     print('################################################################################ \
+        #           터널 진입 ########################################################################')
+        # return np.clip(center - goal_angle, -2+++++2, 22)
+        # ↑↑ 여기까지 ↑↑
 
+        
     def get_steer_in_tunnel(self):
         r_data, l_data = self.sub_scan[55:75+1:3], self.sub_scan[195:215+1:3]  # 정면 0° 기준 좌우 60° ~ 80° 범위 거리 데이터
         r_avg, l_avg = np.sum(r_data) / len(r_data), np.sum(l_data) / len(l_data)  # 60° ~ 80° 범위의 거리 값들의 평균

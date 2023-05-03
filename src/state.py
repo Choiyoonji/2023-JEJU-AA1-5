@@ -95,7 +95,7 @@ class Mission_State():
         self.avoid = False
         
     def is_Lane(self, q):
-        if q < 1:
+        if abs(q) < 1:
             self.lane_done = True
             return False
         return True
@@ -188,8 +188,9 @@ def main():
         elif MS.mission_state == 3:  # 터널
             print("길을 잃었다... 자랑이다~!!")
             if not Mission_tunnel.tunnel_flag:
-                Mission_tunnel.search_tunnel_entrance()
-                steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
+                # Mission_tunnel.search_tunnel_entrance()
+                # steer = Mission_cruising.path_tracking(erp.pose, erp.heading)
+                steer = Mission_tunnel.search_tunnel_entrance()
             else:
                 steer = Mission_tunnel.get_steer()
             
@@ -197,7 +198,7 @@ def main():
             
         elif MS.mission_state == 4: # 차선
             print("누끼누끼누끼누끼ㅓ끼ㅓㅣㅏㅓㅣㅏ")
-            steer = Mission_lane.get_steer(erp.pose, erp.heading, erp.speed, erp.steer, erp.obs)
+            steer = Mission_lane.get_steer(erp.pose, erp.heading, erp.erp_speed, erp.erp_steer, erp.obs)
             speed = LANE_SPEED
                 
         # rospy.sleep(3)
